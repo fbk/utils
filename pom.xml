@@ -6,7 +6,7 @@
 
     <groupId>eu.fbk.dkm.utils</groupId>
     <artifactId>utils</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
 
     <parent>
         <artifactId>fbk-parent</artifactId>
