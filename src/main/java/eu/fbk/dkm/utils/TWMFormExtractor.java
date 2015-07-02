@@ -1,14 +1,13 @@
 package eu.fbk.dkm.utils;
 
-import org.apache.lucene.document.Document;
-import org.apache.lucene.index.IndexReader;
-import org.fbk.cit.hlt.thewikimachine.index.FormPageSearcher;
-import org.slf4j.LoggerFactory;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+
+import org.apache.lucene.document.Document;
+import org.apache.lucene.index.IndexReader;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by alessio on 26/05/15.
