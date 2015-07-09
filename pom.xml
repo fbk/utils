@@ -11,10 +11,39 @@
     <inceptionYear>2015</inceptionYear>
 
     <parent>
+        <groupId>eu.fbk.dkm</groupId>
         <artifactId>fbk-parent</artifactId>
-        <groupId>eu.fbk</groupId>
-        <version>1.0</version>
+        <version>1.1-SNAPSHOT</version>
     </parent>
+
+    <developers>
+         <developer>
+            <id>rospocher</id>
+            <name>Marco Rospocher</name>
+            <email>rospocher@fbk.eu</email>
+            <url>https://dkm.fbk.eu/index.php/Marco_Rospocher</url>
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+            <properties>
+                <picUrl>http://rdfpro.fbk.eu/images/team/rospocher.jpg</picUrl>
+            </properties>
+        </developer>
+        <developer>
+            <id>aprosio</id>
+            <name>Alessio Palmero Aprosio</name>
+            <email>aprosio@fbk.eu</email>
+            <url>https://dkm.fbk.eu/people/profile/aprosio</url>
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <timezone>+1</timezone>
+            <properties>
+                <picUrl>http://rdfpro.fbk.eu/images/team/aprosio.jpg</picUrl>
+            </properties>
+        </developer>
+    </developers>
 
     <licenses>
         <license>
@@ -87,5 +116,9 @@
             </plugin>
         </plugins>
     </build>
+
+    <properties>
+        <utils-version>${project.version}</utils-version>
+    </properties>
 
 </project>
