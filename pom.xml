@@ -7,13 +7,13 @@
 
     <groupId>eu.fbk.dkm.utils</groupId>
     <artifactId>utils</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
     <inceptionYear>2015</inceptionYear>
 
     <parent>
         <groupId>eu.fbk.dkm</groupId>
-        <artifactId>fbk-parent</artifactId>
-        <version>1.1-SNAPSHOT</version>
+        <artifactId>parent</artifactId>
+        <version>1.1</version>
     </parent>
 
     <developers>
@@ -55,24 +55,21 @@
 
     <dependencies>
         <dependency>
+	    <groupId>org.openrdf.sesame</groupId>
+	    <artifactId>sesame-model</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.12</version>
+        </dependency>
+        <dependency>
             <groupId>eu.fbk.rdfpro</groupId>
             <artifactId>rdfpro-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>eu.fbk.rdfpro</groupId>
-            <artifactId>rdfpro-tql</artifactId>
-        </dependency>
-        <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.github.spullara.mustache.java</groupId>
-            <artifactId>compiler</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-core</artifactId>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
