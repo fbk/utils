@@ -2,3 +2,8 @@ target
 *.iml
 .idea
 
+.classpath
+.project
+.settings/
+
+pom.xml.versionsBackup
