@@ -233,7 +233,7 @@ public final class CommandLine {
             option.setArgName(argName);
             option.setOptionalArg(!argRequired);
             option.setArgs(multiValue ? Short.MAX_VALUE : 1);
-            option.setType(argType);
+            option.setType(argType.toClass());
             this.options.addOption(option);
 
             if (mandatory) {
@@ -415,6 +415,28 @@ public final class CommandLine {
         public boolean validate(final String string) {
             // Polymorphism not used for performance reasons
             return validate(string, this);
+        }
+
+        public Class toClass() {
+            return toClass.get(this);
+        }
+
+        public static HashMap<Type, Class> toClass = new HashMap<>();
+        static {
+            toClass.put(Type.STRING, String.class);
+
+            toClass.put(Type.INTEGER, Integer.class);
+            toClass.put(Type.POSITIVE_INTEGER, Integer.class);
+            toClass.put(Type.NON_NEGATIVE_INTEGER, Integer.class);
+
+            toClass.put(Type.FLOAT, Float.class);
+            toClass.put(Type.POSITIVE_FLOAT, Float.class);
+            toClass.put(Type.NON_NEGATIVE_FLOAT, Float.class);
+
+            toClass.put(Type.FILE, File.class);
+            toClass.put(Type.FILE_EXISTING, File.class);
+            toClass.put(Type.DIRECTORY, File.class);
+            toClass.put(Type.DIRECTORY_EXISTING, File.class);
         }
 
         private static boolean validate(final String string, final Type type) {

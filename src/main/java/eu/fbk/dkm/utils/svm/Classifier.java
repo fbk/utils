@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -37,9 +38,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
-import eu.fbk.dkm.utils.Dictionary;
-import eu.fbk.dkm.utils.Util;
-import eu.fbk.dkm.utils.eval.ConfusionMatrix;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +55,9 @@ import libsvm.svm_parameter;
 import libsvm.svm_print_interface;
 import libsvm.svm_problem;
 
+import eu.fbk.dkm.utils.Dictionary;
+import eu.fbk.dkm.utils.Util;
+import eu.fbk.dkm.utils.eval.ConfusionMatrix;
 import eu.fbk.rdfpro.util.Environment;
 import eu.fbk.rdfpro.util.Hash;
 import eu.fbk.rdfpro.util.IO;
@@ -264,7 +265,8 @@ public abstract class Classifier {
         final List<ListenableFuture<ConfusionMatrix>> futures = Lists.newArrayList();
 
         final ListeningExecutorService executor = size > 200000 ? MoreExecutors
-                .sameThreadExecutor() : MoreExecutors.listeningDecorator(Environment.getPool());
+                .newDirectExecutorService() : MoreExecutors.listeningDecorator(Environment
+                .getPool());
 
         for (int i = 0; i < partitionList.size(); ++i) {
             final int index = i;
@@ -690,7 +692,8 @@ public abstract class Classifier {
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this.algorithm.toString().toLowerCase() + " classifier")
+            return MoreObjects
+                    .toStringHelper(this.algorithm.toString().toLowerCase() + " classifier")
                     .omitNullValues().add("#labels", this.numLabels)
                     .add("weights", Arrays.toString(this.weights)).add("C", this.c)
                     .add("bias", this.bias).add("dual", this.dual).add("gamma", this.gamma)
@@ -808,7 +811,8 @@ public abstract class Classifier {
                 final int label = (int) Linear.predictProbability(this.model, features, p);
                 final float[] probabilities = new float[numLabels];
                 for (int i = 0; i < p.length; ++i) {
-                    probabilities[i] = (float) p[i];
+                    final int labelIndex = this.model.getLabels()[i];
+                    probabilities[labelIndex] = (float) p[i];
                 }
                 return vector.label(label, probabilities);
             } else {
@@ -1015,7 +1019,7 @@ public abstract class Classifier {
             final int size = Iterables.size(vectors);
             final Problem problem = new Problem();
             problem.l = size;
-            problem.bias = Objects.firstNonNull(parameters.getBias(), -1f).doubleValue();
+            problem.bias = MoreObjects.firstNonNull(parameters.getBias(), -1f).doubleValue();
             problem.x = new Feature[size][];
             problem.y = new double[size];
             int index = 0;
@@ -1098,7 +1102,8 @@ public abstract class Classifier {
                 final int label = (int) svm.svm_predict_probability(this.model, nodes, p);
                 final float[] probabilities = new float[numLabels];
                 for (int i = 0; i < p.length; ++i) {
-                    probabilities[i] = (float) p[i];
+                    final int labelIndex = this.model.label[i];
+                    probabilities[labelIndex] = (float) p[i];
                 }
                 return vector.label(label, probabilities);
             } else {
