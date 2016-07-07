@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,6 +21,7 @@ import java.util.List;
 public class StatisticSignificance {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StatisticSignificance.class);
+    private static NumberFormat formatter = new DecimalFormat("#0.00000");
 
     public static double[] convertDoubles(List<Double> doubles) {
         double[] ret = new double[doubles.size()];
@@ -77,8 +80,8 @@ public class StatisticSignificance {
                 TTest test = new TTest();
                 double p = test.pairedTTest(c1d, c2d);
                 double r = ApproximateRandomization.test(1000, c1d, c2d);
-                LOGGER.info("{} ---> t-test {}", file.getName(), p);
-                LOGGER.info("{} ---> appr-rand {}", file.getName(), r);
+                LOGGER.info("{} ---> t-test {}", file.getName(), formatter.format(p));
+                LOGGER.info("{} ---> appr-rand {}", file.getName(), formatter.format(r));
                 LOGGER.debug("");
             }
 
