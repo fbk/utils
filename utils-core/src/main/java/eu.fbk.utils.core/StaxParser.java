@@ -1,4 +1,4 @@
-package eu.fbk.dkm.utils;
+package eu.fbk.utils.core;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;

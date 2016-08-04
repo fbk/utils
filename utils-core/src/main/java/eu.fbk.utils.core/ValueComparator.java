@@ -1,4 +1,4 @@
-package eu.fbk.dkm.utils;
+package eu.fbk.utils.core;
 
 import java.util.Comparator;
 import java.util.Map;
