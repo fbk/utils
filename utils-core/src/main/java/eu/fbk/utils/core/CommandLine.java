@@ -215,50 +215,117 @@ public final class CommandLine {
             this.mandatoryOptions = new HashSet<>();
         }
 
+        /**
+         * Sets the name of the executable tool to call from the command line. The name could be
+         * the filename of the script invoking Java, or the base java command for running the
+         * application. This information is used to generate the help message.
+         *
+         * @param name
+         *            the application name, possibly null to show nothing
+         * @return this {@code Parser} object, for call chaining
+         */
         public Parser withName(@Nullable final String name) {
             this.name = name;
             return this;
         }
 
+        /**
+         * Sets the text to be displayed before the option list in the help message.
+         *
+         * @param header
+         *            the header text, possibly null to show nothing
+         * @return this {@code Parser} object, for call chaining
+         */
         public Parser withHeader(@Nullable final String header) {
             this.header = header;
             return this;
         }
 
+        /**
+         * Sets the text to be displayed after the option list in the help message.
+         *
+         * @param footer
+         *            the footer text, possibly null to show nothing
+         * @return this {@code Parser} object, for call chaining
+         */
         public Parser withFooter(@Nullable final String footer) {
             this.footer = footer;
             return this;
         }
 
+        /**
+         * Sets the logger object controlled by verbosity level options.
+         *
+         * @param logger
+         *            the controlled logger object, possibly null to disable verbosity level
+         *            options
+         * @return this {@code Parser} object, for call chaining
+         */
         public Parser withLogger(@Nullable final Logger logger) {
             this.logger = logger;
             return this;
         }
 
-        public Parser withOption(@Nullable final String letter, final String name,
-                final String description) {
+        /**
+         * Defines an option taking zero arguments (a flag). At least one among the short and long
+         * name should be specified.
+         *
+         * @param shortName
+         *            the short name (one letter) associated to the option, if any
+         * @param longname
+         *            the long name associated to the option, if any
+         * @param description
+         *            the description associated to the option, or null to hide the option in the
+         *            help message
+         * @return this {@code Parser} object, for call chaining
+         */
+        public Parser withOption(@Nullable final String shortName, @Nullable final String longName,
+                @Nullable final String description) {
 
-            Preconditions.checkNotNull(name);
-            Preconditions.checkArgument(name.length() > 1);
-            Preconditions.checkNotNull(description);
+            checkOptionNames(shortName, longName);
 
-            final Option option = new Option(letter, name, false, description);
+            final Option option = new Option(shortName == null ? null : shortName, longName, false,
+                    description);
             this.options.addOption(option);
-
             return this;
         }
 
-        public Parser withOption(@Nullable final String letter, final String name,
-                final String description, final String argName, @Nullable final Type argType,
-                final boolean argRequired, final boolean multiValue, final boolean mandatory) {
+        /**
+         * Defines an option taking one argument.
+         *
+         * @param shortName
+         *            the short name (one letter) associated to the option, if any
+         * @param longName
+         *            the long name associated to the option, if any
+         * @param description
+         *            the description associated to the option, or null to hide the option in the
+         *            help message
+         * @param argName
+         *            the name of the argument to display in the help message, mandatory
+         * @param argType
+         *            the type associated to the option argument, optional
+         * @param argRequired
+         *            true if option value(s) are required
+         * @param multiValue
+         *            true if the option accepts multiple values
+         * @param mandatory
+         *            true if the option and its value must be necessarily specified on the
+         *            command line
+         * @return this {@code Parser} object, for call chaining
+         */
+        public Parser withOption(@Nullable final String shortName, @Nullable final String longName,
+                @Nullable final String description, final String argName,
+                @Nullable final Type argType, final boolean argRequired, final boolean multiValue,
+                final boolean mandatory) {
 
-            Preconditions.checkNotNull(name);
-            Preconditions.checkArgument(name.length() > 1);
-            Preconditions.checkNotNull(description);
+            checkOptionNames(shortName, longName);
             Preconditions.checkNotNull(argName);
-            Preconditions.checkNotNull(argType);
+            if (argName.isEmpty()) {
+                throw new IllegalArgumentException("Empty argName string");
+            }
 
-            final Option option = new Option(letter, name, true, description);
+            final Option option = new Option(shortName == null ? null : shortName.toString(),
+                    longName, true, description);
             option.setArgName(argName);
             option.setOptionalArg(!argRequired);
             option.setArgs(multiValue ? Short.MAX_VALUE : 1);
@@ -266,7 +333,7 @@ public final class CommandLine {
             this.options.addOption(option);
 
             if (mandatory) {
-                this.mandatoryOptions.add(name);
+                this.mandatoryOptions.add(longName);
             }
 
             return this;
@@ -277,6 +344,7 @@ public final class CommandLine {
             try {
                 // Add additional options
                 if (this.logger != null) {
+                    // TODO: verbosity levels
                     this.options.addOption("D", "verbose", false, "enable verbose output");
                     this.options.addOption("V", "very verbose", false,
                             "enable very verbose output");
@@ -298,13 +366,20 @@ public final class CommandLine {
 
                 try {
                     // Handle verbose mode via reflection, depending on the SLF4J backend used
-                    if (this.logger.getClass().getName()
-                            .equals(" ch.qos.logback.classic.Logger")) {
+                    // TODO: verbosity levels
+                    final String loggerClassName = this.logger.getClass().getName();
+                    if (loggerClassName.equals("ch.qos.logback.classic.Logger")) {
                         final Class<?> levelClass = Class.forName("ch.qos.logback.classic.Level");
                         final Object level = call(levelClass, "valueOf", cmd.hasOption('V')
                                 ? "DEBUG" : cmd.hasOption('D') ? "TRACE" : "INFO");
                         call(this.logger, "setLevel", level);
+                    } else if (loggerClassName.equals("org.apache.log4j.Logger")) {
+                        final Class<?> levelClass = Class.forName("org.apache.log4j.Level");
+                        final Object level = call(levelClass, "valueOf", cmd.hasOption('V')
+                                ? "DEBUG" : cmd.hasOption('D') ? "TRACE" : "INFO");
+                        call(this.logger, "setLevel", level);
                     }
+
                 } catch (final Throwable ex) {
                     // ignore
                 }
@@ -353,6 +428,18 @@ public final class CommandLine {
 
             } catch (final Throwable ex) {
                 throw new Exception(ex.getMessage(), ex);
+            }
+        }
+
+        private void checkOptionNames(@Nullable final String shortName,
+                @Nullable final String longName) {
+            if (shortName == null && longName == null) {
+                throw new IllegalArgumentException(
+                        "At least one among short and long option names should be specified");
+            }
+            if (longName != null && longName.length() <= 1) {
+                throw new IllegalArgumentException(
+                        "Long option name should be longer than one character");
             }
         }
 
