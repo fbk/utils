@@ -371,12 +371,12 @@ public final class CommandLine {
                     if (loggerClassName.equals("ch.qos.logback.classic.Logger")) {
                         final Class<?> levelClass = Class.forName("ch.qos.logback.classic.Level");
                         final Object level = call(levelClass, "valueOf", cmd.hasOption('V')
-                                ? "DEBUG" : cmd.hasOption('D') ? "TRACE" : "INFO");
+                                ? "TRACE" : cmd.hasOption('D') ? "DEBUG" : "INFO");
                         call(this.logger, "setLevel", level);
                     } else if (loggerClassName.equals("org.apache.log4j.Logger")) {
                         final Class<?> levelClass = Class.forName("org.apache.log4j.Level");
                         final Object level = call(levelClass, "valueOf", cmd.hasOption('V')
-                                ? "DEBUG" : cmd.hasOption('D') ? "TRACE" : "INFO");
+                                ? "TRACE" : cmd.hasOption('D') ? "DEBUG" : "INFO");
                         call(this.logger, "setLevel", level);
                     }
 
