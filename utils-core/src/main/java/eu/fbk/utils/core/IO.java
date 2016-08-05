@@ -2,6 +2,7 @@ package eu.fbk.utils.core;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilterOutputStream;
 import java.io.IOException;
@@ -10,12 +11,19 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.lang.ProcessBuilder.Redirect;
+import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -24,10 +32,13 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.annotation.Nullable;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Throwables;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,16 +80,146 @@ public final class IO {
     private static final int BUFFER_NUM_WRITE = Integer
             .parseInt(Environment.getProperty("utils.io.buffer.numw", "16"));
 
+    private static final Map<Path, Object[]> LOCK_DATA = new HashMap<>();
+
     @Nullable
     public static <T> T closeQuietly(@Nullable final T object) {
         if (object instanceof AutoCloseable) {
             try {
                 ((AutoCloseable) object).close();
             } catch (final Throwable ex) {
+                if (ex instanceof InterruptedException) {
+                    Thread.currentThread().interrupt();
+                }
                 LOGGER.error("Error closing " + object.getClass().getSimpleName(), ex);
             }
         }
         return object;
+    }
+
+    /**
+     * Try to acquire an exclusive or shared inter-process lock on a file used specifically as
+     * lock file. The method accepts the path of the lock file and two boolean parameters that
+     * specify if the lock should be acquired in a shared mode ({@code shared} parameter) and if a
+     * null result lock object should be returned if the lock cannot be acquired ({@code lenient}
+     * parameter); in any case, the method does not block waiting for the lock to become
+     * available. The lock file is created if necessary and, unless the lock is acquired in a
+     * shared way, the file is deleted when the lock is released. If the method is called twice
+     * (or more) on the same lock file, it will try acquiring as many locks as the number of times
+     * it has been called. This is clearly possibly only for shared locks, so if an exclusive lock
+     * is asked, only the first call may succeed (if lock is not owned by another process) while
+     * successive calls will fail.
+     *
+     * @param path
+     *            the path to the lock file, not null (the lock file is created if it does not
+     *            exist)
+     * @param shared
+     *            true if the lock should be acquired in a shared mode
+     * @param lenient
+     *            true if null should be returned in case the lock cannot be acquired (otherwise,
+     *            an {@link IllegalStateException} is thrown)
+     * @return the acquired lock object, if successful
+     * @throws IOException
+     *             in case the lock file cannot be created, read, or written, or for any other IO
+     *             error
+     */
+    @Nullable
+    public static FileLock tryLock(final Path path, final boolean shared, final boolean lenient)
+            throws IOException {
+
+        // Check parameters
+        Objects.requireNonNull(path);
+
+        // We acquire a global shared lock for the whole call, to make it thread safe
+        synchronized (LOCK_DATA) {
+
+            // We need the FileLock object and a reference count (if the lock is shared)
+            final FileLock lock;
+            final AtomicInteger refCount;
+
+            // See if the file was already locked in this VM and handle two cases
+            final Object[] entry = LOCK_DATA.get(path);
+            if (entry == null) {
+                // File not locked yet here. Create the file if necessary, then try locking it
+                final FileChannel channel = FileChannel.open(path, StandardOpenOption.CREATE,
+                        StandardOpenOption.READ, StandardOpenOption.WRITE);
+                try {
+                    lock = channel.tryLock(0, Long.MAX_VALUE, shared);
+                    refCount = new AtomicInteger(1);
+                    if (lock != null) {
+                        final String processName = ManagementFactory.getRuntimeMXBean().getName();
+                        channel.write(ByteBuffer.wrap(processName.getBytes(Charsets.UTF_8)));
+                        LOCK_DATA.put(path, new Object[] { lock, refCount });
+                    }
+                } catch (final Throwable ex) {
+                    LOCK_DATA.remove(path);
+                    Throwables.propagateIfPossible(ex, IOException.class);
+                    throw Throwables.propagate(ex);
+                }
+
+            } else {
+                // File already locked in this VM. Can reuse the lock only if shared
+                final FileLock oldLock = (FileLock) entry[0];
+                refCount = (AtomicInteger) entry[1];
+                if (oldLock.isShared()) {
+                    lock = oldLock;
+                    refCount.incrementAndGet();
+                } else {
+                    lock = null;
+                }
+            }
+
+            // If we didn't manage to acquire the lock, either return null or throw an error
+            if (lock == null) {
+                if (lenient) {
+                    return null;
+                }
+                throw new IllegalStateException(path + " already locked elsewhere");
+            }
+
+            // On success, return a FileLock wrapper that takes care of proper lock release
+            return new FileLock(lock.channel(), lock.position(), lock.size(), lock.isShared()) {
+
+                private boolean valid = true;
+
+                @Override
+                public synchronized boolean isValid() {
+                    return this.valid;
+                }
+
+                @Override
+                public synchronized void release() throws IOException {
+
+                    // Abort if already released
+                    if (!this.valid) {
+                        return;
+                    }
+
+                    try {
+                        // Decrement the ref count. If zero, release the lock, remove the entry in
+                        // the global map, close the lock file and delete it if the lock was
+                        // exclusive (in that case we are sure the lock was not open in other
+                        // applications)
+                        synchronized (LOCK_DATA) {
+                            if (refCount.decrementAndGet() == 0) {
+                                try {
+                                    lock.release();
+                                } finally {
+                                    LOCK_DATA.remove(path);
+                                    IO.closeQuietly(lock.channel());
+                                    if (!lock.isShared()) {
+                                        Files.deleteIfExists(path);
+                                    }
+                                }
+                            }
+                        }
+                    } finally {
+                        this.valid = false;
+                    }
+                }
+
+            };
+        }
     }
 
     public static URL extractURL(final String location) {
@@ -101,6 +242,18 @@ public final class IO {
             }
         } catch (final Throwable ex) {
             throw new IllegalArgumentException("Cannot extract URL from '" + location + "'", ex);
+        }
+    }
+
+    public static File extractFile(final String location) {
+        final URL url = extractURL(location);
+        if (!"file".equals(url.getProtocol())) {
+            throw new IllegalArgumentException("Not a file " + location);
+        }
+        try {
+            return new File(url.toURI());
+        } catch (final URISyntaxException ex) {
+            throw new IllegalArgumentException("Invalid file:// URL: " + location);
         }
     }
 
@@ -148,7 +301,10 @@ public final class IO {
                 throw new IllegalArgumentException("Invalid file:// URL: " + location);
             }
 
-            if (builder == null) {
+            if (!file.exists()) {
+                throw new FileNotFoundException(file.getAbsolutePath());
+
+            } else if (builder == null) {
                 LOGGER.debug("Reading file {}", file);
                 return new FileInputStream(file);
 
@@ -201,6 +357,15 @@ public final class IO {
     }
 
     public static OutputStream write(final String location) throws IOException {
+        return writeOrAppend(location, false);
+    }
+
+    public static OutputStream append(final String location) throws IOException {
+        return writeOrAppend(location, true);
+    }
+
+    private static OutputStream writeOrAppend(final String location, final boolean append)
+            throws IOException {
 
         final String ext = extractExtension(location);
         final URL url = extractURL(location);
@@ -229,13 +394,13 @@ public final class IO {
 
         if (builder == null) {
             LOGGER.debug("Writing file {}", file);
-            return new FileOutputStream(file);
+            return new FileOutputStream(file, append);
 
         } else {
             final String cmd = Joiner.on(' ').join(builder.command());
             LOGGER.debug("Writing file {} using {}", file, cmd);
             builder.redirectError(Redirect.INHERIT);
-            builder.redirectOutput(file);
+            builder.redirectOutput(append ? Redirect.appendTo(file) : Redirect.to(file));
             final Process process = builder.start();
             return new FilterOutputStream(process.getOutputStream()) {
 
@@ -267,6 +432,7 @@ public final class IO {
                             final int code = process.waitFor();
                             LOGGER.debug("Process completed with exit code {}", code);
                         } catch (final InterruptedException ex) {
+                            Thread.currentThread().interrupt(); // restore interruption
                             throw new IOException("Didn't wait till IO completion", ex);
                         } finally {
                             process.destroy(); // not strictly necessary
