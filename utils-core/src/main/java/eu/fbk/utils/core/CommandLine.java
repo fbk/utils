@@ -1,28 +1,38 @@
 package eu.fbk.utils.core;
 
-import ch.qos.logback.classic.Level;
-import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.slf4j.Logger;
-
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+
+import javax.annotation.Nullable;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
+
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.slf4j.Logger;
 
 public final class CommandLine {
 
@@ -140,6 +150,26 @@ public final class CommandLine {
         return ImmutableList.copyOf(list);
     }
 
+    private static Object call(final Object object, final String methodName,
+            final Object... args) {
+        final boolean isStatic = object instanceof Class<?>;
+        final Class<?> clazz = isStatic ? (Class<?>) object : object.getClass();
+        for (final Method method : clazz.getMethods()) {
+            if (method.getName().equals(methodName)
+                    && isStatic == Modifier.isStatic(method.getModifiers())
+                    && method.getParameterTypes().length == args.length) {
+                try {
+                    return method.invoke(isStatic ? null : object, args);
+                } catch (final InvocationTargetException ex) {
+                    Throwables.propagate(ex.getCause());
+                } catch (final IllegalAccessException ex) {
+                    throw new IllegalArgumentException("Cannot invoke " + method, ex);
+                }
+            }
+        }
+        throw new IllegalArgumentException("Cannot invoke " + methodName);
+    }
+
     public static void fail(final Throwable throwable) {
         if (throwable instanceof Exception) {
             if (throwable.getMessage() == null) {
@@ -242,7 +272,6 @@ public final class CommandLine {
             return this;
         }
 
-        @SuppressWarnings("unchecked")
         public CommandLine parse(final String... args) {
 
             try {
@@ -260,21 +289,21 @@ public final class CommandLine {
                 // Parse options
                 org.apache.commons.cli.CommandLine cmd = null;
                 try {
-                    cmd = new GnuParser().parse(this.options, args);
+                    cmd = new DefaultParser().parse(this.options, args);
                 } catch (final Throwable ex) {
                     System.err.println("SYNTAX ERROR: " + ex.getMessage());
                     printHelp();
                     throw new Exception(null);
                 }
 
-                // Handle verbose mode
                 try {
-                    ((ch.qos.logback.classic.Logger) this.logger).setLevel(Level.INFO);
-                    if (cmd.hasOption('D')) {
-                        ((ch.qos.logback.classic.Logger) this.logger).setLevel(Level.DEBUG);
-                    }
-                    if (cmd.hasOption('V')) {
-                        ((ch.qos.logback.classic.Logger) this.logger).setLevel(Level.TRACE);
+                    // Handle verbose mode via reflection, depending on the SLF4J backend used
+                    if (this.logger.getClass().getName()
+                            .equals(" ch.qos.logback.classic.Logger")) {
+                        final Class<?> levelClass = Class.forName("ch.qos.logback.classic.Level");
+                        final Object level = call(levelClass, "valueOf", cmd.hasOption('V')
+                                ? "DEBUG" : cmd.hasOption('D') ? "TRACE" : "INFO");
+                        call(this.logger, "setLevel", level);
                     }
                 } catch (final Throwable ex) {
                     // ignore
@@ -329,8 +358,8 @@ public final class CommandLine {
 
         private void printVersion() {
             String version = "(development)";
-            final URL url = CommandLine.class.getClassLoader().getResource(
-                    "META-INF/maven/eu.fbk.nafview/nafview/pom.properties");
+            final URL url = CommandLine.class.getClassLoader()
+                    .getResource("META-INF/maven/eu.fbk.nafview/nafview/pom.properties");
             if (url != null) {
                 try {
                     final InputStream stream = url.openStream();
@@ -370,7 +399,6 @@ public final class CommandLine {
             }
             out.flush();
         }
-
     }
 
     public static final class Exception extends RuntimeException {
