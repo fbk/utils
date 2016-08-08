@@ -1,17 +1,28 @@
 package eu.fbk.utils.core;
 
+import com.google.common.io.CharStreams;
+import org.junit.Assert;
+import org.junit.Test;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import com.google.common.io.CharStreams;
-
-import org.junit.Assert;
-import org.junit.Test;
-
 public class IOTest {
+
+    @Test
+    public void typeTest() {
+        String type;
+
+        type = IO.extractType("/Users/alessio/Desktop/ATH-indice2016.1-online.fld/filelist.gz");
+        Assert.assertNull(type);
+        type = IO.extractType("/Users/alessio/Desktop/ATH-indice2016.1-online.fld/filelist");
+        Assert.assertNull(type);
+        type = IO.extractType("/Users/alessio/Desktop/ATH-indice2016.1-online.fld/filelist.xml.gz");
+        Assert.assertEquals(type, "xml");
+    }
 
     @Test
     public void testReadWrite() throws IOException {

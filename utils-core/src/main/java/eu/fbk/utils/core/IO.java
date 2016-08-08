@@ -1,15 +1,13 @@
 package eu.fbk.utils.core;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FilterOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.Writer;
+import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
+import com.google.common.base.Throwables;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nullable;
+import java.io.*;
 import java.lang.ProcessBuilder.Redirect;
 import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
@@ -22,26 +20,12 @@ import java.nio.channels.FileLock;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import javax.annotation.Nullable;
-
-import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
-import com.google.common.base.Throwables;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 // note on buffered stream thread safety: they are not thread safe and are expected to be used by
 // a single thread, with the exception of method close() which can be called concurrently by other
@@ -51,6 +35,15 @@ import org.slf4j.LoggerFactory;
 public final class IO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IO.class);
+    public static final Set<String> compressedExtensions = new HashSet<>();
+
+    static {
+        compressedExtensions.add(".bz2");
+        compressedExtensions.add(".gz");
+        compressedExtensions.add(".xz");
+        compressedExtensions.add(".7z");
+        compressedExtensions.add(".lz4");
+    }
 
     // sequential read performances varying buffer size on test TQL file
     // 8k - 380781 tr/s
@@ -110,18 +103,14 @@ public final class IO {
      * is asked, only the first call may succeed (if lock is not owned by another process) while
      * successive calls will fail.
      *
-     * @param path
-     *            the path to the lock file, not null (the lock file is created if it does not
-     *            exist)
-     * @param shared
-     *            true if the lock should be acquired in a shared mode
-     * @param lenient
-     *            true if null should be returned in case the lock cannot be acquired (otherwise,
-     *            an {@link IllegalStateException} is thrown)
+     * @param path    the path to the lock file, not null (the lock file is created if it does not
+     *                exist)
+     * @param shared  true if the lock should be acquired in a shared mode
+     * @param lenient true if null should be returned in case the lock cannot be acquired (otherwise,
+     *                an {@link IllegalStateException} is thrown)
      * @return the acquired lock object, if successful
-     * @throws IOException
-     *             in case the lock file cannot be created, read, or written, or for any other IO
-     *             error
+     * @throws IOException in case the lock file cannot be created, read, or written, or for any other IO
+     *                     error
      */
     @Nullable
     public static FileLock tryLock(final Path path, final boolean shared, final boolean lenient)
@@ -273,6 +262,25 @@ public final class IO {
         final int nameStart = Math.max(-1, location.lastIndexOf('/', extEnd)) + 1;
         final int extStart = location.indexOf('.', nameStart);
         return extStart < 0 ? "" : location.substring(extStart, extEnd);
+    }
+
+    public static String extractType(final String location) {
+        String ext = extractExtension(location);
+        String[] parts = ext.split("\\.+");
+        String last = null;
+        for (int i = parts.length - 1; i >= 0; i--) {
+            String part = parts[i];
+            if (compressedExtensions.contains("." + part)) {
+                continue;
+            }
+            if (part.length() == 0) {
+                continue;
+            }
+            last = part;
+            break;
+        }
+
+        return last;
     }
 
     public static InputStream read(final String location) throws IOException {
@@ -610,7 +618,7 @@ public final class IO {
                 this.closed = true;
             }
             this.count = this.pos; // fail soon in case a new write request is
-                                   // received
+            // received
             this.stream.close();
         }
 
@@ -799,7 +807,7 @@ public final class IO {
             }
             this.closed = true;
             this.count = this.pos; // fail soon in case a new write request is
-                                   // received
+            // received
             this.reader.close();
         }
 
@@ -1120,7 +1128,7 @@ public final class IO {
                 this.queue.clear();
                 this.buffers.clear();
                 this.reader = null; // may be heavyweight, better to release
-                                    // immediately
+                // immediately
                 synchronized (this) {
                     if (this.exception != null) {
                         propagate(this.exception);
@@ -1453,7 +1461,7 @@ public final class IO {
                 this.queue.clear();
                 this.buffers.clear();
                 this.writer = null; // may be heavyweight, better to release
-                                    // immediately
+                // immediately
                 synchronized (this) {
                     if (this.exception != null) {
                         propagate(this.exception);
@@ -1731,7 +1739,7 @@ public final class IO {
                 this.queue.clear();
                 this.buffers.clear();
                 this.stream = null; // may be heavyweight, better to release
-                                    // immediately
+                // immediately
                 synchronized (this) {
                     if (this.exception != null) {
                         propagate(this.exception);
@@ -2051,7 +2059,7 @@ public final class IO {
                 this.queue.clear();
                 this.buffers.clear();
                 this.stream = null; // may be heavyweight, better to release
-                                    // immediately
+                // immediately
                 synchronized (this) {
                     if (this.exception != null) {
                         propagate(this.exception);
@@ -2153,7 +2161,7 @@ public final class IO {
                 }
 
             } else if (b0 <= 0b11110111) { // 11110xxx 10xxxxxx 10xxxxxx
-                                               // 10xxxxxx
+                // 10xxxxxx
                 final int b1 = this.stream.read();
                 final int b2 = this.stream.read();
                 final int b3 = this.stream.read();
@@ -2276,13 +2284,13 @@ public final class IO {
                 this.stream.write(0b10000000 | c & 0b00111111);
 
             } else if (c <= 0b1111_111111_111111) { // 1110xxxx 10xxxxxx
-                                                        // 10xxxxxx
+                // 10xxxxxx
                 this.stream.write(0b11100000 | c >>> 12);
                 this.stream.write(0b10000000 | c >>> 6 & 0b00111111);
                 this.stream.write(0b10000000 | c & 0b00111111);
 
             } else if (c <= 0b111_111111_111111_111111) { // 11110xxx 10xxxxxx
-                                                              // 10xxxxxx 10xxxxxx
+                // 10xxxxxx 10xxxxxx
                 this.stream.write(0b11110000 | c >>> 18);
                 this.stream.write(0b10000000 | c >>> 12 & 0b00111111);
                 this.stream.write(0b10000000 | c >>> 6 & 0b00111111);
