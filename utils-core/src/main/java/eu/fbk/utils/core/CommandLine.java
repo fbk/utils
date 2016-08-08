@@ -345,9 +345,8 @@ public final class CommandLine {
                 // Add additional options
                 if (this.logger != null) {
                     // TODO: verbosity levels
-                    this.options.addOption("D", "verbose", false, "enable verbose output");
-                    this.options.addOption("V", "very verbose", false,
-                            "enable very verbose output");
+                    this.options.addOption(null, "debug", false, "enable verbose output");
+                    this.options.addOption(null, "trace", false, "enable very verbose output");
                 }
                 this.options.addOption("v", "version", false,
                         "display version information and terminate");
@@ -370,13 +369,13 @@ public final class CommandLine {
                     final String loggerClassName = this.logger.getClass().getName();
                     if (loggerClassName.equals("ch.qos.logback.classic.Logger")) {
                         final Class<?> levelClass = Class.forName("ch.qos.logback.classic.Level");
-                        final Object level = call(levelClass, "valueOf", cmd.hasOption('V')
-                                ? "TRACE" : cmd.hasOption('D') ? "DEBUG" : "INFO");
+                        final Object level = call(levelClass, "valueOf", cmd.hasOption("trace")
+                                ? "TRACE" : cmd.hasOption("debug") ? "DEBUG" : "INFO");
                         call(this.logger, "setLevel", level);
                     } else if (loggerClassName.equals("org.apache.log4j.Logger")) {
                         final Class<?> levelClass = Class.forName("org.apache.log4j.Level");
-                        final Object level = call(levelClass, "valueOf", cmd.hasOption('V')
-                                ? "TRACE" : cmd.hasOption('D') ? "DEBUG" : "INFO");
+                        final Object level = call(levelClass, "valueOf", cmd.hasOption("trace")
+                                ? "TRACE" : cmd.hasOption("debug") ? "DEBUG" : "INFO");
                         call(this.logger, "setLevel", level);
                     }
 
