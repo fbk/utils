@@ -1,37 +1,45 @@
-/*
- * RDFpro - An extensible tool for building stream-oriented RDF processing libraries.
- * 
- * Written in 2014 by Francesco Corcoglioniti with support by Marco Amadori, Michele Mostarda,
- * Alessio Palmero Aprosio and Marco Rospocher. Contact info on http://rdfpro.fbk.eu/
- * 
- * To the extent possible under law, the authors have dedicated all copyright and related and
- * neighboring rights to this software to the public domain worldwide. This software is
- * distributed without any warranty.
- * 
- * You should have received a copy of the CC0 Public Domain Dedication along with this software.
- * If not, see <http://creativecommons.org/publicdomain/zero/1.0/>.
- */
 package eu.fbk.utils.core;
 
-import com.google.common.base.Splitter;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.nio.charset.Charset;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.annotation.Nullable;
+
+import com.google.common.base.Charsets;
+import com.google.common.base.Splitter;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class Environment {
 
@@ -52,38 +60,66 @@ public final class Environment {
 
     private static List<Plugin> frozenPlugins = null;
 
+    @Nullable
+    private static String frozenName;
+
     private static int frozenCores = 0;
 
+    private static Map<String, ProcessBuilder> commands = new HashMap<String, ProcessBuilder>();
+
     static {
+        // Initial properties initialized with some sensible defaults
         final Properties properties = new Properties();
-        properties.setProperty("rdfpro.cores", "" + Runtime.getRuntime().availableProcessors());
+        properties.setProperty("utils.environment.cores",
+                "" + Runtime.getRuntime().availableProcessors());
+
+        // Initial sources containing environment.properties and all the filenames mentioned in
+        // system property environment.sources
+        final Set<String> sources = Sets.newHashSet("environment.properties");
+        sources.addAll(Splitter.on(',').omitEmptyStrings()
+                .splitToList(System.getProperty("utils.environment.sources", "")));
+        final List<String> queue = new LinkedList<>(sources);
+
         try {
-            final List<String> envSources = Lists.newArrayList("rdfpro.properties");
-            envSources.addAll(Splitter.on(',').omitEmptyStrings()
-                    .splitToList(System.getProperty("rdfpro.environment.sources", "")));
-            final List<URL> urls = new ArrayList<>();
-            final ClassLoader cl = Environment.class.getClassLoader();
-            for (final String envSource : envSources) {
-                for (final String p : new String[] { "META-INF/" + envSource, envSource }) {
-                    for (final Enumeration<URL> e = cl.getResources(p); e.hasMoreElements();) {
+            // Load properties from property sources
+            while (!queue.isEmpty()) {
+
+                // Pick the next source to load
+                final String source = queue.remove(0);
+
+                // Retrieve the URLs of classpath resources matching the source
+                final List<URL> urls = new ArrayList<>();
+                for (final String path : new String[] { "META-INF/" + source, source }) {
+                    for (final Enumeration<URL> e = Environment.class.getClassLoader()
+                            .getResources(path); e.hasMoreElements();) {
                         urls.add(e.nextElement());
                     }
                 }
-            }
-            for (final URL url : urls) {
-                final Reader in = new InputStreamReader(url.openStream(), Charset.forName("UTF-8"));
-                try {
-                    properties.load(in);
-                    LOGGER.debug("Loaded configuration from '" + url + "'");
-                } catch (final Throwable ex) {
-                    LOGGER.warn("Could not load configuration from '" + url + "' - ignoring", ex);
-                } finally {
-                    in.close();
+
+                // For each classpath resource, load properties and scan for new sources to load
+                for (final URL url : urls) {
+                    final Properties urlProperties = new Properties();
+                    try (Reader in = new InputStreamReader(url.openStream(), Charsets.UTF_8)) {
+                        urlProperties.load(in);
+                        properties.putAll(urlProperties);
+                        LOGGER.debug("Loaded {} properties from '{}'", urlProperties.size(), url);
+                    } catch (final Throwable ex) {
+                        LOGGER.warn("Could not load properties from '" + url + "' - ignore", ex);
+                    }
+                    for (final String urlSource : Splitter.on(',').omitEmptyStrings().splitToList(
+                            urlProperties.getProperty("utils.environment.sources", ""))) {
+                        if (sources.add(urlSource)) {
+                            queue.add(urlSource);
+                        }
+                    }
                 }
             }
+
         } catch (final IOException ex) {
-            LOGGER.warn("Could not complete loading of configuration from classpath resources", ex);
+            // Log warning and proceed
+            LOGGER.warn("Could not complete loading of properties from classpath resources", ex);
         }
+
         for (final Map.Entry<?, ?> entry : properties.entrySet()) {
             loadedProperties.put((String) entry.getKey(), (String) entry.getValue());
         }
@@ -124,9 +160,16 @@ public final class Environment {
         }
     }
 
+    public static String getName() {
+        if (frozenName == null) {
+            frozenName = getProperty("utils.environment.name", "application");
+        }
+        return frozenName;
+    }
+
     public static int getCores() {
         if (frozenCores <= 0) {
-            frozenCores = Integer.parseInt(getProperty("rdfpro.cores"));
+            frozenCores = Integer.parseInt(getProperty("utils.environment.cores"));
         }
         return frozenCores;
     }
@@ -137,22 +180,9 @@ public final class Environment {
                 if (frozenPool == null) {
                     frozenPool = configuredPool;
                     if (frozenPool == null) {
-                        final ThreadFactory factory = new ThreadFactory() {
-
-                            private final AtomicInteger counter = new AtomicInteger(0);
-
-                            @Override
-                            public Thread newThread(final Runnable runnable) {
-                                final int index = this.counter.getAndIncrement();
-                                final Thread thread = new Thread(runnable);
-                                thread.setName(String.format("rdfpro-%03d", index));
-                                thread.setPriority(Thread.NORM_PRIORITY);
-                                thread.setDaemon(true);
-                                return thread;
-                            }
-
-                        };
-                        frozenPool = Executors.newCachedThreadPool(factory);
+                        frozenPool = Executors.newCachedThreadPool(new ThreadFactoryBuilder()
+                                .setDaemon(true).setPriority(Thread.NORM_PRIORITY)
+                                .setNameFormat(getName() + "-%03d").build());
                     }
                     LOGGER.debug("Using pool {}", frozenPool);
                 }
@@ -257,6 +287,40 @@ public final class Environment {
         return propertyNames;
     }
 
+    public static ProcessBuilder getProcessBuilder(final String command, final String... args) {
+        synchronized (commands) {
+            ProcessBuilder template = commands.get(command);
+            if (template == null) {
+                final String property = "utils.environment.cmd." + command;
+                String cmd = getProperty(property);
+                if (cmd != null) {
+                    try {
+                        template = new ProcessBuilder();
+                        cmd = cmd.trim();
+                        final String[] tokens = tokenize(cmd, Pattern.compile("[\\s]+|(=)"));
+                        int i = 0;
+                        for (; i + 3 <= tokens.length; i += 3) {
+                            if (tokens[i + 1].equals("=")) {
+                                template.environment().put(tokens[i], tokens[i + 2]);
+                            }
+                        }
+                        template.command().addAll(Arrays.asList(tokens).subList(i, tokens.length));
+                        LOGGER.debug("Using {} for command {}", cmd, command);
+                    } catch (final Throwable ex) {
+                        LOGGER.warn("Ignoring invalid property " + property + " = " + cmd, ex);
+                        template = null;
+                    }
+                }
+                template = template != null ? template : new ProcessBuilder(command);
+                commands.put(command, template);
+            }
+            final ProcessBuilder result = new ProcessBuilder(new ArrayList<>(template.command()));
+            result.environment().putAll(template.environment());
+            result.command().addAll(Arrays.asList(args));
+            return result;
+        }
+    }
+
     public static Map<String, String> getPlugins(final Class<?> baseClass) {
 
         Objects.requireNonNull(baseClass);
@@ -293,7 +357,9 @@ public final class Environment {
                 try {
                     return baseClass.cast(plugin.factory.invoke(null, name, args));
                 } catch (final IllegalAccessException ex) {
-                    throw new Error("Unexpected error (!)", ex); // checked when loading plugins
+                    throw new Error("Unexpected error (!)", ex); // checked when
+                                                                 // loading
+                                                                 // plugins
                 } catch (final InvocationTargetException ex) {
                     final Throwable cause = ex.getCause();
                     throw cause instanceof RuntimeException ? (RuntimeException) cause
@@ -302,8 +368,56 @@ public final class Environment {
             }
         }
 
-        throw new IllegalArgumentException("Unknown " + baseClass.getSimpleName() + " plugin '"
-                + name + "'");
+        throw new IllegalArgumentException(
+                "Unknown " + baseClass.getSimpleName() + " plugin '" + name + "'");
+    }
+
+    static String[] tokenize(final String string, final Pattern delimiter) {
+        final List<String> tokens = new ArrayList<>();
+        final Matcher matcher = delimiter.matcher(string);
+        int start = 0;
+        int index = 0;
+        while (matcher.find(index)) {
+            final char startCh = string.charAt(start);
+            int end = matcher.start();
+            if (startCh == '\'' || startCh == '"') {
+                if (end - start < 2) {
+                    index = matcher.start() + 1;
+                    continue;
+                }
+                final char endCh = string.charAt(end - 1);
+                int numEscapes = 0;
+                for (int i = end - 2; i >= start && string.charAt(i) == '\\'; --i) {
+                    ++numEscapes;
+                }
+                if (endCh != startCh || numEscapes % 2 == 1) {
+                    index = matcher.start() + 1;
+                    continue;
+                }
+                ++start;
+                --end;
+            }
+            tokens.add(string.substring(start, end));
+            for (int i = 1; i <= matcher.groupCount(); ++i) {
+                final String group = matcher.group(i);
+                if (group != null) {
+                    tokens.add(group);
+                }
+            }
+            index = matcher.end();
+            start = matcher.end();
+        }
+        int end = string.length();
+        if (end - start >= 2) {
+            final char startCh = string.charAt(start);
+            final char endCh = string.charAt(end - 1);
+            if (startCh == endCh && startCh == '\'' || startCh == '"') {
+                ++start;
+                --end;
+            }
+        }
+        tokens.add(start < end ? string.substring(start, end) : "");
+        return tokens.toArray(new String[tokens.size()]);
     }
 
     @SuppressWarnings("unchecked")
@@ -320,8 +434,8 @@ public final class Environment {
                     final String name = entry.getKey();
                     final String value = entry.getValue();
                     if (name.startsWith("plugin.enable.") || name.startsWith("plugin,enable,")) {
-                        final List<String> names = Arrays.asList(name.substring(
-                                "plugin.enable.".length()).split("[.,]"));
+                        final List<String> names = Arrays
+                                .asList(name.substring("plugin.enable.".length()).split("[.,]"));
                         if (value.equalsIgnoreCase("true")) {
                             disabledNames.removeAll(names);
                         } else {
@@ -345,11 +459,11 @@ public final class Environment {
                             }
                             final String className = tokens[0];
                             final String methodName = tokens[1];
-                            final List<String> pluginNames = Arrays.asList(Arrays.copyOfRange(
-                                    tokens, 2, tokens.length));
+                            final List<String> pluginNames = Arrays
+                                    .asList(Arrays.copyOfRange(tokens, 2, tokens.length));
                             final Class<?> clazz = Class.forName(className);
-                            final Method method = clazz.getDeclaredMethod(methodName,
-                                    String.class, String[].class);
+                            final Method method = clazz.getDeclaredMethod(methodName, String.class,
+                                    String[].class);
                             method.setAccessible(true);
                             plugins.add(new Plugin(pluginNames, value, method));
                         } catch (final Throwable ex) {

@@ -1,28 +1,38 @@
 package eu.fbk.utils.core;
 
-import ch.qos.logback.classic.Level;
-import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.slf4j.Logger;
-
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+
+import javax.annotation.Nullable;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
+
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.slf4j.Logger;
 
 public final class CommandLine {
 
@@ -140,6 +150,26 @@ public final class CommandLine {
         return ImmutableList.copyOf(list);
     }
 
+    private static Object call(final Object object, final String methodName,
+            final Object... args) {
+        final boolean isStatic = object instanceof Class<?>;
+        final Class<?> clazz = isStatic ? (Class<?>) object : object.getClass();
+        for (final Method method : clazz.getMethods()) {
+            if (method.getName().equals(methodName)
+                    && isStatic == Modifier.isStatic(method.getModifiers())
+                    && method.getParameterTypes().length == args.length) {
+                try {
+                    return method.invoke(isStatic ? null : object, args);
+                } catch (final InvocationTargetException ex) {
+                    Throwables.propagate(ex.getCause());
+                } catch (final IllegalAccessException ex) {
+                    throw new IllegalArgumentException("Cannot invoke " + method, ex);
+                }
+            }
+        }
+        throw new IllegalArgumentException("Cannot invoke " + methodName);
+    }
+
     public static void fail(final Throwable throwable) {
         if (throwable instanceof Exception) {
             if (throwable.getMessage() == null) {
@@ -185,50 +215,117 @@ public final class CommandLine {
             this.mandatoryOptions = new HashSet<>();
         }
 
+        /**
+         * Sets the name of the executable tool to call from the command line. The name could be
+         * the filename of the script invoking Java, or the base java command for running the
+         * application. This information is used to generate the help message.
+         *
+         * @param name
+         *            the application name, possibly null to show nothing
+         * @return this {@code Parser} object, for call chaining
+         */
         public Parser withName(@Nullable final String name) {
             this.name = name;
             return this;
         }
 
+        /**
+         * Sets the text to be displayed before the option list in the help message.
+         *
+         * @param header
+         *            the header text, possibly null to show nothing
+         * @return this {@code Parser} object, for call chaining
+         */
         public Parser withHeader(@Nullable final String header) {
             this.header = header;
             return this;
         }
 
+        /**
+         * Sets the text to be displayed after the option list in the help message.
+         *
+         * @param footer
+         *            the footer text, possibly null to show nothing
+         * @return this {@code Parser} object, for call chaining
+         */
         public Parser withFooter(@Nullable final String footer) {
             this.footer = footer;
             return this;
         }
 
+        /**
+         * Sets the logger object controlled by verbosity level options.
+         *
+         * @param logger
+         *            the controlled logger object, possibly null to disable verbosity level
+         *            options
+         * @return this {@code Parser} object, for call chaining
+         */
         public Parser withLogger(@Nullable final Logger logger) {
             this.logger = logger;
             return this;
         }
 
-        public Parser withOption(@Nullable final String letter, final String name,
-                final String description) {
+        /**
+         * Defines an option taking zero arguments (a flag). At least one among the short and long
+         * name should be specified.
+         *
+         * @param shortName
+         *            the short name (one letter) associated to the option, if any
+         * @param longname
+         *            the long name associated to the option, if any
+         * @param description
+         *            the description associated to the option, or null to hide the option in the
+         *            help message
+         * @return this {@code Parser} object, for call chaining
+         */
+        public Parser withOption(@Nullable final String shortName, @Nullable final String longName,
+                @Nullable final String description) {
 
-            Preconditions.checkNotNull(name);
-            Preconditions.checkArgument(name.length() > 1);
-            Preconditions.checkNotNull(description);
+            checkOptionNames(shortName, longName);
 
-            final Option option = new Option(letter, name, false, description);
+            final Option option = new Option(shortName == null ? null : shortName, longName, false,
+                    description);
             this.options.addOption(option);
-
             return this;
         }
 
-        public Parser withOption(@Nullable final String letter, final String name,
-                final String description, final String argName, @Nullable final Type argType,
-                final boolean argRequired, final boolean multiValue, final boolean mandatory) {
+        /**
+         * Defines an option taking one argument.
+         *
+         * @param shortName
+         *            the short name (one letter) associated to the option, if any
+         * @param longName
+         *            the long name associated to the option, if any
+         * @param description
+         *            the description associated to the option, or null to hide the option in the
+         *            help message
+         * @param argName
+         *            the name of the argument to display in the help message, mandatory
+         * @param argType
+         *            the type associated to the option argument, optional
+         * @param argRequired
+         *            true if option value(s) are required
+         * @param multiValue
+         *            true if the option accepts multiple values
+         * @param mandatory
+         *            true if the option and its value must be necessarily specified on the
+         *            command line
+         * @return this {@code Parser} object, for call chaining
+         */
+        public Parser withOption(@Nullable final String shortName, @Nullable final String longName,
+                @Nullable final String description, final String argName,
+                @Nullable final Type argType, final boolean argRequired, final boolean multiValue,
+                final boolean mandatory) {
 
-            Preconditions.checkNotNull(name);
-            Preconditions.checkArgument(name.length() > 1);
-            Preconditions.checkNotNull(description);
+            checkOptionNames(shortName, longName);
             Preconditions.checkNotNull(argName);
-            Preconditions.checkNotNull(argType);
+            if (argName.isEmpty()) {
+                throw new IllegalArgumentException("Empty argName string");
+            }
 
-            final Option option = new Option(letter, name, true, description);
+            final Option option = new Option(shortName == null ? null : shortName.toString(),
+                    longName, true, description);
             option.setArgName(argName);
             option.setOptionalArg(!argRequired);
             option.setArgs(multiValue ? Short.MAX_VALUE : 1);
@@ -236,21 +333,20 @@ public final class CommandLine {
             this.options.addOption(option);
 
             if (mandatory) {
-                this.mandatoryOptions.add(name);
+                this.mandatoryOptions.add(longName);
             }
 
             return this;
         }
 
-        @SuppressWarnings("unchecked")
         public CommandLine parse(final String... args) {
 
             try {
                 // Add additional options
                 if (this.logger != null) {
-                    this.options.addOption("D", "verbose", false, "enable verbose output");
-                    this.options.addOption("V", "very verbose", false,
-                            "enable very verbose output");
+                    // TODO: verbosity levels
+                    this.options.addOption(null, "debug", false, "enable verbose output");
+                    this.options.addOption(null, "trace", false, "enable very verbose output");
                 }
                 this.options.addOption("v", "version", false,
                         "display version information and terminate");
@@ -260,22 +356,29 @@ public final class CommandLine {
                 // Parse options
                 org.apache.commons.cli.CommandLine cmd = null;
                 try {
-                    cmd = new GnuParser().parse(this.options, args);
+                    cmd = new DefaultParser().parse(this.options, args);
                 } catch (final Throwable ex) {
                     System.err.println("SYNTAX ERROR: " + ex.getMessage());
                     printHelp();
                     throw new Exception(null);
                 }
 
-                // Handle verbose mode
                 try {
-                    ((ch.qos.logback.classic.Logger) this.logger).setLevel(Level.INFO);
-                    if (cmd.hasOption('D')) {
-                        ((ch.qos.logback.classic.Logger) this.logger).setLevel(Level.DEBUG);
+                    // Handle verbose mode via reflection, depending on the SLF4J backend used
+                    // TODO: verbosity levels
+                    final String loggerClassName = this.logger.getClass().getName();
+                    if (loggerClassName.equals("ch.qos.logback.classic.Logger")) {
+                        final Class<?> levelClass = Class.forName("ch.qos.logback.classic.Level");
+                        final Object level = call(levelClass, "valueOf", cmd.hasOption("trace")
+                                ? "TRACE" : cmd.hasOption("debug") ? "DEBUG" : "INFO");
+                        call(this.logger, "setLevel", level);
+                    } else if (loggerClassName.equals("org.apache.log4j.Logger")) {
+                        final Class<?> levelClass = Class.forName("org.apache.log4j.Level");
+                        final Object level = call(levelClass, "valueOf", cmd.hasOption("trace")
+                                ? "TRACE" : cmd.hasOption("debug") ? "DEBUG" : "INFO");
+                        call(this.logger, "setLevel", level);
                     }
-                    if (cmd.hasOption('V')) {
-                        ((ch.qos.logback.classic.Logger) this.logger).setLevel(Level.TRACE);
-                    }
+
                 } catch (final Throwable ex) {
                     // ignore
                 }
@@ -327,10 +430,22 @@ public final class CommandLine {
             }
         }
 
+        private void checkOptionNames(@Nullable final String shortName,
+                @Nullable final String longName) {
+            if (shortName == null && longName == null) {
+                throw new IllegalArgumentException(
+                        "At least one among short and long option names should be specified");
+            }
+            if (longName != null && longName.length() <= 1) {
+                throw new IllegalArgumentException(
+                        "Long option name should be longer than one character");
+            }
+        }
+
         private void printVersion() {
             String version = "(development)";
-            final URL url = CommandLine.class.getClassLoader().getResource(
-                    "META-INF/maven/eu.fbk.nafview/nafview/pom.properties");
+            final URL url = CommandLine.class.getClassLoader()
+                    .getResource("META-INF/maven/eu.fbk.nafview/nafview/pom.properties");
             if (url != null) {
                 try {
                     final InputStream stream = url.openStream();
@@ -370,7 +485,6 @@ public final class CommandLine {
             }
             out.flush();
         }
-
     }
 
     public static final class Exception extends RuntimeException {
