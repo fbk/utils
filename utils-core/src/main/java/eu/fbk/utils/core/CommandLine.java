@@ -344,7 +344,6 @@ public final class CommandLine {
             try {
                 // Add additional options
                 if (this.logger != null) {
-                    // TODO: verbosity levels
                     this.options.addOption(null, "debug", false, "enable verbose output");
                     this.options.addOption(null, "trace", false, "enable very verbose output");
                 }
@@ -365,7 +364,6 @@ public final class CommandLine {
 
                 try {
                     // Handle verbose mode via reflection, depending on the SLF4J backend used
-                    // TODO: verbosity levels
                     final String loggerClassName = this.logger.getClass().getName();
                     if (loggerClassName.equals("ch.qos.logback.classic.Logger")) {
                         final Class<?> levelClass = Class.forName("ch.qos.logback.classic.Level");
@@ -377,6 +375,19 @@ public final class CommandLine {
                         final Object level = call(levelClass, "valueOf", cmd.hasOption("trace")
                                 ? "TRACE" : cmd.hasOption("debug") ? "DEBUG" : "INFO");
                         call(this.logger, "setLevel", level);
+                    } else if (loggerClassName.equals("org.apache.logging.slf4j.Log4jLogger")) {
+                        final Class<?> managerClass = Class
+                                .forName("org.apache.logging.log4j.LogManager");
+                        final Object ctx = call(managerClass, "getContext", false);
+                        final Object config = call(ctx, "getConfiguration");
+                        final Object logConfig = call(config, "getLoggerConfig",
+                                this.logger.getName());
+                        final Class<?> levelClass = Class
+                                .forName("org.apache.logging.log4j.Level");
+                        final Object level = call(levelClass, "valueOf", cmd.hasOption("trace")
+                                ? "TRACE" : cmd.hasOption("debug") ? "DEBUG" : "INFO");
+                        call(logConfig, "setLevel", level);
+                        call(ctx, "updateLoggers");
                     }
 
                 } catch (final Throwable ex) {
