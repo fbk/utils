@@ -1,10 +1,10 @@
 package eu.fbk.utils.eval;
 
-import java.io.Serializable;
-import java.util.Objects;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Ordering;
+
+import java.io.Serializable;
+import java.util.Objects;
 
 public final class PrecisionRecall implements Serializable {
 
@@ -69,14 +69,10 @@ public final class PrecisionRecall implements Serializable {
      * accuracy a, and count value. The method tries to recover the missing TP, FP, FN and TN
      * values, assigning them the value NaN where recovery is not possible.
      *
-     * @param precision
-     *            the precision value
-     * @param recall
-     *            the recall value
-     * @param accuracy
-     *            the accuracy value
-     * @param count
-     *            the count value
+     * @param precision the precision value
+     * @param recall    the recall value
+     * @param accuracy  the accuracy value
+     * @param count     the count value
      * @return the corresponding {@code PrecisionRecall} object
      */
     public static PrecisionRecall forMeasures(final double precision, final double recall,

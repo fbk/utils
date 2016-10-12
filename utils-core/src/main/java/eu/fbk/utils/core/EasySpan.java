@@ -13,36 +13,35 @@ import java.util.List;
  */
 public final class EasySpan implements Comparable<EasySpan> {
 
-	public int begin;
+    public int begin;
 
-	public int end;
+    public int end;
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(EasySpan.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(EasySpan.class);
 
-	public EasySpan(final String span) {
-		final String trimmedSpan = span.trim();
-		final int delimiter = trimmedSpan.indexOf(',');
-		this.begin = Integer.parseInt(trimmedSpan.substring(0, delimiter));
-		this.end = Integer.parseInt(trimmedSpan.substring(delimiter + 1));
-	}
+    public EasySpan(final String span) {
+        final String trimmedSpan = span.trim();
+        final int delimiter = trimmedSpan.indexOf(',');
+        this.begin = Integer.parseInt(trimmedSpan.substring(0, delimiter));
+        this.end = Integer.parseInt(trimmedSpan.substring(delimiter + 1));
+    }
 
-	public EasySpan(final int begin, final int end) {
-		this.begin = begin;
-		this.end = end;
-	}
+    public EasySpan(final int begin, final int end) {
+        this.begin = begin;
+        this.end = end;
+    }
 
-	public String apply(final String text) {
-		return apply(text, true);
-	}
+    public String apply(final String text) {
+        return apply(text, true);
+    }
 
-	public String apply(final String text, boolean escapeHTML) {
-		if (escapeHTML) {
-			return HtmlEscapers.htmlEscaper().escape(text.substring(this.begin, this.end));
-		}
-		else {
-			return text.substring(this.begin, this.end);
-		}
-	}
+    public String apply(final String text, boolean escapeHTML) {
+        if (escapeHTML) {
+            return HtmlEscapers.htmlEscaper().escape(text.substring(this.begin, this.end));
+        } else {
+            return text.substring(this.begin, this.end);
+        }
+    }
 
 //	public EasySpan align(final String text) {
 //
@@ -82,93 +81,92 @@ public final class EasySpan implements Comparable<EasySpan> {
 //		}
 //	}
 
-	public boolean contains(final EasySpan span) {
-		return this.begin <= span.begin && this.end >= span.end;
-	}
+    public boolean contains(final EasySpan span) {
+        return this.begin <= span.begin && this.end >= span.end;
+    }
 
-	public boolean overlaps(final EasySpan span) {
-		return this.end > span.begin && this.begin < span.end;
-	}
+    public boolean overlaps(final EasySpan span) {
+        return this.end > span.begin && this.begin < span.end;
+    }
 
-	public List<EasySpan> split(final Iterable<EasySpan> spans) {
+    public List<EasySpan> split(final Iterable<EasySpan> spans) {
 
-		final List<EasySpan> sortedSpans = Lists.newArrayList(spans);
-		boolean overlaps = true;
-		while (overlaps) {
-			overlaps = false;
-			Collections.sort(sortedSpans);
-			for (int i = 0; i < sortedSpans.size() - 1; ++i) {
-				final EasySpan span1 = sortedSpans.get(i);
-				final EasySpan span2 = sortedSpans.get(i + 1);
-				if (span1.end > span2.begin) {
-					sortedSpans.remove(i);
-					if (span1.begin < span2.begin) {
-						sortedSpans.add(new EasySpan(span1.begin, span2.begin));
-					}
-					if (span1.end < span2.end) {
-						sortedSpans.remove(i); // former i + 1
-						sortedSpans.add(new EasySpan(span2.begin, span1.end));
-						sortedSpans.add(new EasySpan(span1.end, span2.end));
-					}
-					else if (span1.end > span2.end) {
-						sortedSpans.add(new EasySpan(span2.end, span1.end));
-					}
-					overlaps = true;
-					// System.err.println(span1 + " " + span2 + " "
-					// + new Span(span1.begin, span2.begin) + " "
-					// + new Span(span2.begin, span1.end));
-					break;
-				}
-			}
-		}
+        final List<EasySpan> sortedSpans = Lists.newArrayList(spans);
+        boolean overlaps = true;
+        while (overlaps) {
+            overlaps = false;
+            Collections.sort(sortedSpans);
+            for (int i = 0; i < sortedSpans.size() - 1; ++i) {
+                final EasySpan span1 = sortedSpans.get(i);
+                final EasySpan span2 = sortedSpans.get(i + 1);
+                if (span1.end > span2.begin) {
+                    sortedSpans.remove(i);
+                    if (span1.begin < span2.begin) {
+                        sortedSpans.add(new EasySpan(span1.begin, span2.begin));
+                    }
+                    if (span1.end < span2.end) {
+                        sortedSpans.remove(i); // former i + 1
+                        sortedSpans.add(new EasySpan(span2.begin, span1.end));
+                        sortedSpans.add(new EasySpan(span1.end, span2.end));
+                    } else if (span1.end > span2.end) {
+                        sortedSpans.add(new EasySpan(span2.end, span1.end));
+                    }
+                    overlaps = true;
+                    // System.err.println(span1 + " " + span2 + " "
+                    // + new Span(span1.begin, span2.begin) + " "
+                    // + new Span(span2.begin, span1.end));
+                    break;
+                }
+            }
+        }
 
-		final List<EasySpan> result = Lists.newArrayList();
-		int index = this.begin;
-		for (final EasySpan span : sortedSpans) {
-			if (span.begin < index) {
-				throw new Error("Span overlap: " + spans);
-			}
-			if (span.begin > index) {
-				result.add(new EasySpan(index, span.begin));
-			}
-			result.add(span);
-			index = span.end;
-		}
-		if (index < this.end) {
-			result.add(new EasySpan(index, this.end));
-		}
-		return result;
-	}
+        final List<EasySpan> result = Lists.newArrayList();
+        int index = this.begin;
+        for (final EasySpan span : sortedSpans) {
+            if (span.begin < index) {
+                throw new Error("Span overlap: " + spans);
+            }
+            if (span.begin > index) {
+                result.add(new EasySpan(index, span.begin));
+            }
+            result.add(span);
+            index = span.end;
+        }
+        if (index < this.end) {
+            result.add(new EasySpan(index, this.end));
+        }
+        return result;
+    }
 
-	@Override
-	public int compareTo(final EasySpan span) {
-		int result = this.begin - span.begin;
-		if (result == 0) {
-			result = span.end - this.end;
-		}
-		return result;
-	}
+    @Override
+    public int compareTo(final EasySpan span) {
+        int result = this.begin - span.begin;
+        if (result == 0) {
+            result = span.end - this.end;
+        }
+        return result;
+    }
 
-	@Override
-	public boolean equals(final Object object) {
-		if (object == this) {
-			return true;
-		}
-		if (!(object instanceof EasySpan)) {
-			return false;
-		}
-		final EasySpan other = (EasySpan) object;
-		return this.begin == other.begin && this.end == other.end;
-	}
+    @Override
+    public boolean equals(final Object object) {
+        if (object == this) {
+            return true;
+        }
+        if (!(object instanceof EasySpan)) {
+            return false;
+        }
+        final EasySpan other = (EasySpan) object;
+        return this.begin == other.begin && this.end == other.end;
+    }
 
-	@Override
-	public int hashCode() {
-		return this.begin * 37 + this.end;
-	}
+    @Override
+    public int hashCode() {
+        return this.begin * 37 + this.end;
+    }
 
-	@Override
-	public String toString() {
-		return this.begin + "," + this.end;
-	}
+    @Override
+    public String toString() {
+        return this.begin + "," + this.end;
+    }
 
 }

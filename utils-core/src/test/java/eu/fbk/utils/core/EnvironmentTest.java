@@ -1,12 +1,11 @@
 package eu.fbk.utils.core;
 
-import java.util.regex.Pattern;
-
 import com.google.common.collect.ImmutableList;
-
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.util.regex.Pattern;
 
 public class EnvironmentTest {
 

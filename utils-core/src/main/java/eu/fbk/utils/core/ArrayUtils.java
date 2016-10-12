@@ -6,23 +6,23 @@ package eu.fbk.utils.core;
 
 public class ArrayUtils {
 
-	public static <T> String implode(String glue, T[] array) {
-		// array is empty, return empty string
-		if (array == null || array.length == 0) {
-			return "";
-		}
+    public static <T> String implode(String glue, T[] array) {
+        // array is empty, return empty string
+        if (array == null || array.length == 0) {
+            return "";
+        }
 
-		// init the builder with the first element
-		StringBuilder sb = new StringBuilder();
-		sb.append(array[0]);
+        // init the builder with the first element
+        StringBuilder sb = new StringBuilder();
+        sb.append(array[0]);
 
-		// concat each element
-		// begin at 1 to avoid duplicating first element
-		for (int i = 1; i < array.length; i++) {
-			sb.append(glue).append(array[i]);
-		}
+        // concat each element
+        // begin at 1 to avoid duplicating first element
+        for (int i = 1; i < array.length; i++) {
+            sb.append(glue).append(array[i]);
+        }
 
-		// return the result
-		return sb.toString();
-	}
+        // return the result
+        return sb.toString();
+    }
 }

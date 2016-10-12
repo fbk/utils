@@ -7,9 +7,9 @@ import org.openrdf.model.impl.ValueFactoryImpl;
 
 /**
  * Constants for the NIF 2.0 Core Ontology (draft).
- * 
+ *
  * @see <a href="http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core/nif-core.html">
- *      vocabulary specification</a>
+ * vocabulary specification</a>
  */
 public final class NIF {
 
@@ -45,11 +45,11 @@ public final class NIF {
 
     /** Class nif:NormalizedCollectionOccurrence. */
     public static final URI NORMALIZED_COLLECTION_OCCURRENCE = //
-    createURI("NormalizedCollectionOccurrence");
+            createURI("NormalizedCollectionOccurrence");
 
     /** Class nif:NormalizedContextOccurrence. */
     public static final URI NORMALIZED_CONTEXT_OCCURRENCE = //
-    createURI("NormalizedContextOccurrence");
+            createURI("NormalizedContextOccurrence");
 
     /** Class nif:OccurringString. */
     public static final URI OCCURRING_STRING = createURI("OccurringString");

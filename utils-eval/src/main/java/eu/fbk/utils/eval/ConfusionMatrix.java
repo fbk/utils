@@ -1,14 +1,13 @@
 package eu.fbk.utils.eval;
 
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Objects;
-
-import javax.annotation.Nullable;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Ordering;
+
+import javax.annotation.Nullable;
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Objects;
 
 public final class ConfusionMatrix implements Serializable {
 

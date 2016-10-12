@@ -1,29 +1,12 @@
 package eu.fbk.utils.core;
 
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import com.google.common.base.*;
+import com.google.common.base.Objects;
+import com.google.common.collect.*;
 
 import javax.annotation.Nullable;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
+import java.io.Serializable;
+import java.util.*;
 
 public abstract class Graph<V, E> implements Serializable {
 
@@ -696,10 +679,10 @@ public abstract class Graph<V, E> implements Serializable {
 
             final Predicate<V> newVertexFilter = this.vertexFilter == null ? vertexFilter
                     : vertexFilter == null ? this.vertexFilter : Predicates.and(this.vertexFilter,
-                            vertexFilter);
+                    vertexFilter);
             final Predicate<Edge<V, E>> newEdgeFilter = this.edgeFilter == null ? edgeFilter
                     : edgeFilter == null ? this.edgeFilter : Predicates.and(this.edgeFilter,
-                            edgeFilter);
+                    edgeFilter);
             return new FilteredGraph<V, E>(this.graph, newVertexFilter, newEdgeFilter);
         }
 

@@ -1,59 +1,28 @@
 package eu.fbk.utils.svm;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.lang.reflect.Array;
-import java.net.URL;
-import java.nio.charset.Charset;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
-import javax.annotation.Nullable;
-
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Table;
-
-import org.openrdf.model.BNode;
-import org.openrdf.model.Literal;
-import org.openrdf.model.Resource;
-import org.openrdf.model.Statement;
-import org.openrdf.model.URI;
-import org.openrdf.model.Value;
-import org.openrdf.model.vocabulary.RDF;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.google.common.collect.*;
 import eu.fbk.rdfpro.util.Environment;
 import eu.fbk.rdfpro.util.IO;
 import eu.fbk.rdfpro.util.Namespaces;
 import eu.fbk.rdfpro.util.Statements;
+import org.openrdf.model.*;
+import org.openrdf.model.vocabulary.RDF;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.annotation.Nullable;
+import java.io.*;
+import java.lang.reflect.Array;
+import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.file.FileSystem;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 // TODO: change class name based on its final contents
 
@@ -76,7 +45,7 @@ public final class Util {
             final ClassLoader cl = Environment.class.getClassLoader();
             for (final String p : new String[] { "META-INF/naftools.properties",
                     "naftools.properties" }) {
-                for (final Enumeration<URL> e = cl.getResources(p); e.hasMoreElements();) {
+                for (final Enumeration<URL> e = cl.getResources(p); e.hasMoreElements(); ) {
                     urls.add(e.nextElement());
                 }
             }
@@ -338,11 +307,9 @@ public final class Util {
     /**
      * Clean an illegal IRI string, trying to make it legal (as per RFC 3987).
      *
-     * @param string
-     *            the IRI string to clean
+     * @param string the IRI string to clean
      * @return the cleaned IRI string (possibly the input unchanged) upon success
-     * @throws IllegalArgumentException
-     *             in case the supplied input cannot be transformed into a legal IRI
+     * @throws IllegalArgumentException in case the supplied input cannot be transformed into a legal IRI
      */
     @Nullable
     public static String cleanIRI(@Nullable final String string) throws IllegalArgumentException {
