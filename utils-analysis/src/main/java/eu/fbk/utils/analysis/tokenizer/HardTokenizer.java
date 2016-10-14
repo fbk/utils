@@ -16,163 +16,157 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 public class HardTokenizer extends AbstractTokenizer implements Tokenizer {
-	/**
-	 * Define a static logger variable so that it references the
-	 * Logger instance named <code>HardTokenizer</code>.
-	 */
-	static Logger logger = Logger.getLogger(HardTokenizer.class.getName());
 
-	private static HardTokenizer ourInstance = null;
+    /**
+     * Define a static logger variable so that it references the
+     * Logger instance named <code>HardTokenizer</code>.
+     */
+    static Logger logger = Logger.getLogger(HardTokenizer.class.getName());
 
-	public static synchronized HardTokenizer getInstance() {
-		if (ourInstance == null) {
-			ourInstance = new HardTokenizer();
-		}
-		return ourInstance;
-	}
+    private static HardTokenizer ourInstance = null;
 
-	public String[] stringArray(String text) {
-		List<String> list=stringList(text);
-		return list.toArray(new String[list.size()]);
-	}
+    public static synchronized HardTokenizer getInstance() {
+        if (ourInstance == null) {
+            ourInstance = new HardTokenizer();
+        }
+        return ourInstance;
+    }
 
-	public List<String> stringList(String text) {
-		if (text.length() == 0) {
-			return new ArrayList<String>();
-		}
-		List<String> list = new ArrayList<String>();
-		char currentChar = text.charAt(0);
-		char previousChar = currentChar;
-		int start = 0;
-		boolean isCurrentCharLetterOrDigit;
-		boolean isPreviousCharLetterOrDigit;
-		if (!Character.isLetterOrDigit(currentChar)) {
-			if (!isSeparatorChar(currentChar)) {
-				list.add(new String(new char[]{currentChar}));
-			}
-		}
+    public String[] stringArray(String text) {
+        List<String> list = stringList(text);
+        return list.toArray(new String[list.size()]);
+    }
 
-		//logger.debug("0\t" + (int) previousChar + "\t<" + previousChar + ">");
-		for (int i = 1; i < text.length(); i++) {
-			currentChar = text.charAt(i);
-			isCurrentCharLetterOrDigit = Character.isLetterOrDigit(currentChar);
-			isPreviousCharLetterOrDigit = Character.isLetterOrDigit(previousChar);
-			//logger.debug(i + (int) currentChar + "\t<" + currentChar + ">");
-			if (isCurrentCharLetterOrDigit) {
-				if (!isPreviousCharLetterOrDigit) {
-					start = i;
-				}
-			}
-			else {
-				if (isPreviousCharLetterOrDigit) {
-					// word o number
-					list.add(text.substring(start, i));
-					if (!isSeparatorChar(currentChar)) {
-						list.add(new String(new char[]{currentChar}));
-					}
-				}
-				else {
-					//otherPageCounter
-					if (!isSeparatorChar(currentChar)) {
-						list.add(new String(new char[]{currentChar}));
-					}
-				}
-			}
-			previousChar = currentChar;
-		}
-		if (Character.isLetterOrDigit(previousChar)) {
-			list.add(text.substring(start, text.length()));
-		}
+    public List<String> stringList(String text) {
+        if (text.length() == 0) {
+            return new ArrayList<String>();
+        }
+        List<String> list = new ArrayList<String>();
+        char currentChar = text.charAt(0);
+        char previousChar = currentChar;
+        int start = 0;
+        boolean isCurrentCharLetterOrDigit;
+        boolean isPreviousCharLetterOrDigit;
+        if (!Character.isLetterOrDigit(currentChar)) {
+            if (!isSeparatorChar(currentChar)) {
+                list.add(new String(new char[] { currentChar }));
+            }
+        }
 
-		return list;
-	}
+        //logger.debug("0\t" + (int) previousChar + "\t<" + previousChar + ">");
+        for (int i = 1; i < text.length(); i++) {
+            currentChar = text.charAt(i);
+            isCurrentCharLetterOrDigit = Character.isLetterOrDigit(currentChar);
+            isPreviousCharLetterOrDigit = Character.isLetterOrDigit(previousChar);
+            //logger.debug(i + (int) currentChar + "\t<" + currentChar + ">");
+            if (isCurrentCharLetterOrDigit) {
+                if (!isPreviousCharLetterOrDigit) {
+                    start = i;
+                }
+            } else {
+                if (isPreviousCharLetterOrDigit) {
+                    // word o number
+                    list.add(text.substring(start, i));
+                    if (!isSeparatorChar(currentChar)) {
+                        list.add(new String(new char[] { currentChar }));
+                    }
+                } else {
+                    //otherPageCounter
+                    if (!isSeparatorChar(currentChar)) {
+                        list.add(new String(new char[] { currentChar }));
+                    }
+                }
+            }
+            previousChar = currentChar;
+        }
+        if (Character.isLetterOrDigit(previousChar)) {
+            list.add(text.substring(start, text.length()));
+        }
 
-	public List<Token> tokenList(String text)
-	{
-		if (text.length() == 0) {
-			return new ArrayList<>();
-		}
-		List<Token> list = new ArrayList<Token>();
-		char currentChar = text.charAt(0);
-		char previousChar = currentChar;
-		int start = 0;
-		boolean isCurrentCharLetterOrDigit;
-		boolean isPreviousCharLetterOrDigit;
-		Token token;
+        return list;
+    }
 
-		if (!Character.isLetterOrDigit(currentChar)) {
-			if (!isSeparatorChar(currentChar)) {
-				list.add(new Token(0, 1, new String(new char[]{currentChar})));
-			}
-		}
+    public List<Token> tokenList(String text) {
+        if (text.length() == 0) {
+            return new ArrayList<>();
+        }
+        List<Token> list = new ArrayList<Token>();
+        char currentChar = text.charAt(0);
+        char previousChar = currentChar;
+        int start = 0;
+        boolean isCurrentCharLetterOrDigit;
+        boolean isPreviousCharLetterOrDigit;
+        Token token;
 
-		//logger.debug("0\t" + (int) previousChar + "\t<" + previousChar + ">");
-		for (int i = 1; i < text.length(); i++) {
-			currentChar = text.charAt(i);
-			isCurrentCharLetterOrDigit = Character.isLetterOrDigit(currentChar);
-			isPreviousCharLetterOrDigit = Character.isLetterOrDigit(previousChar);
-			//logger.debug(i + (int) currentChar + "\t<" + currentChar + ">");
-			if (isCurrentCharLetterOrDigit) {
-				if (!isPreviousCharLetterOrDigit) {
-					start = i;
-				}
-			}
-			else {
-				if (isPreviousCharLetterOrDigit) {
-					// word o number
+        if (!Character.isLetterOrDigit(currentChar)) {
+            if (!isSeparatorChar(currentChar)) {
+                list.add(new Token(0, 1, new String(new char[] { currentChar })));
+            }
+        }
 
-					list.add(new Token(start, i, text.substring(start, i)));
-					if (!isSeparatorChar(currentChar)) {
-						// otherPageCounter
-						list.add(new Token(i, i + 1, new String(new char[]{currentChar})));
-					}
-				}
-				else {
-					//otherPageCounter
-					if (!isSeparatorChar(currentChar)) {
-						list.add(new Token(i, i + 1, new String(new char[]{currentChar})));
-					}
-				}
-			}
-			previousChar = currentChar;
-		}
-		if (Character.isLetterOrDigit(previousChar)) {
-			list.add(new Token(start, text.length(), text.substring(start, text.length())));
-		}
+        //logger.debug("0\t" + (int) previousChar + "\t<" + previousChar + ">");
+        for (int i = 1; i < text.length(); i++) {
+            currentChar = text.charAt(i);
+            isCurrentCharLetterOrDigit = Character.isLetterOrDigit(currentChar);
+            isPreviousCharLetterOrDigit = Character.isLetterOrDigit(previousChar);
+            //logger.debug(i + (int) currentChar + "\t<" + currentChar + ">");
+            if (isCurrentCharLetterOrDigit) {
+                if (!isPreviousCharLetterOrDigit) {
+                    start = i;
+                }
+            } else {
+                if (isPreviousCharLetterOrDigit) {
+                    // word o number
 
-		return list;
-	}
+                    list.add(new Token(start, i, text.substring(start, i)));
+                    if (!isSeparatorChar(currentChar)) {
+                        // otherPageCounter
+                        list.add(new Token(i, i + 1, new String(new char[] { currentChar })));
+                    }
+                } else {
+                    //otherPageCounter
+                    if (!isSeparatorChar(currentChar)) {
+                        list.add(new Token(i, i + 1, new String(new char[] { currentChar })));
+                    }
+                }
+            }
+            previousChar = currentChar;
+        }
+        if (Character.isLetterOrDigit(previousChar)) {
+            list.add(new Token(start, text.length(), text.substring(start, text.length())));
+        }
 
-	public Token[] tokenArray(String text)
-	{
-		List<Token> list=tokenList(text);
-		return list.toArray(new Token[list.size()]);
-	}
+        return list;
+    }
 
-	public String toString(){
-		return "HardTokenizer";
-	}
+    public Token[] tokenArray(String text) {
+        List<Token> list = tokenList(text);
+        return list.toArray(new Token[list.size()]);
+    }
 
-	public static void main(String argv[]) throws IOException {
-		String logConfig = System.getProperty("log-config");
-		if (logConfig == null) {
-			logConfig = "configuration/log-config.txt";
-		}
+    public String toString() {
+        return "HardTokenizer";
+    }
 
-		PropertyConfigurator.configure(logConfig);
-		// java -cp dist/thewikimachine.jar org.fbk.cit.hlt.thewikimachine.analysis.HardTokenizer
+    public static void main(String argv[]) throws IOException {
+        String logConfig = System.getProperty("log-config");
+        if (logConfig == null) {
+            logConfig = "configuration/log-config.txt";
+        }
 
-		File f = new File(argv[0]);
-		String s = null;
-		if (f.exists()) {
-			s = read(new File(argv[0]));
-		}
-		else {
-			s = argv[0];
-		}
-		HardTokenizer hardTokenizer = new HardTokenizer();
-		String t = hardTokenizer.tokenizedString(s);
-		logger.info(t);
-	}
+        PropertyConfigurator.configure(logConfig);
+        // java -cp dist/thewikimachine.jar org.fbk.cit.hlt.thewikimachine.analysis.HardTokenizer
+
+        File f = new File(argv[0]);
+        String s = null;
+        if (f.exists()) {
+            s = read(new File(argv[0]));
+        } else {
+            s = argv[0];
+        }
+        HardTokenizer hardTokenizer = new HardTokenizer();
+        String t = hardTokenizer.tokenizedString(s);
+        logger.info(t);
+    }
 
 }

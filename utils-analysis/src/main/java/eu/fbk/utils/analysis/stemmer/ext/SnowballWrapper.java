@@ -24,109 +24,97 @@ import java.text.DecimalFormat;
 /**
  * TO DO
  *
- * @author 	Claudio Giuliano
+ * @author Claudio Giuliano
  * @version %I%, %G%
- * @since		1.0
+ * @since 1.0
  */
-public class SnowballWrapper extends AbstractStemmer implements Stemmer
-{
-	/**
-	 * Define a static logger variable so that it references the
-	 * Logger instance named <code>SnowballWrapper</code>.
-	 */
-	static Logger logger = Logger.getLogger(SnowballWrapper.class.getName()); 
+public class SnowballWrapper extends AbstractStemmer implements Stemmer {
 
-	//
-	SnowballStemmer stemmer;
-	
-	//
-	private SnowballWrapper(SnowballStemmer stemmer)
-	{
-		this.stemmer = stemmer;
-	} // end constructor
+    /**
+     * Define a static logger variable so that it references the
+     * Logger instance named <code>SnowballWrapper</code>.
+     */
+    static Logger logger = Logger.getLogger(SnowballWrapper.class.getName());
 
-	//
-	public static SnowballWrapper getInstance(String lang) throws StemmerNotFoundException
-	{
-		SnowballStemmer snowballStemmer = null;
-		try
-		{
-			Class stemClass = Class.forName("org.tartarus.snowball.ext." + lang.toLowerCase() + "Stemmer");
-			logger.info("stemmer class " + stemClass);
-			snowballStemmer = (SnowballStemmer) stemClass.newInstance();
-		}
-		catch (Exception e)
-		{
-			logger.error(e);
-			throw new StemmerNotFoundException(lang);
-		}
-				
-		return new SnowballWrapper(snowballStemmer);
-	} // end getInstance
+    //
+    SnowballStemmer stemmer;
 
-	
-	//
-	public String stem(String s)
-	{
-		if (stemmer == null)
-		{
-			return s;
-		}
-		
-		stemmer.setCurrent(s);
-		stemmer.stem();
-		return stemmer.getCurrent();
-	} // end stem
+    //
+    private SnowballWrapper(SnowballStemmer stemmer) {
+        this.stemmer = stemmer;
+    } // end constructor
 
-	//
-	public String toString()
-	{
-		return "Snowball Stemmer";
-	} // end toString
+    //
+    public static SnowballWrapper getInstance(String lang) throws StemmerNotFoundException {
+        SnowballStemmer snowballStemmer = null;
+        try {
+            Class stemClass = Class.forName("org.tartarus.snowball.ext." + lang.toLowerCase() + "Stemmer");
+            logger.info("stemmer class " + stemClass);
+            snowballStemmer = (SnowballStemmer) stemClass.newInstance();
+        } catch (Exception e) {
+            logger.error(e);
+            throw new StemmerNotFoundException(lang);
+        }
 
-	//
-	public void interactive() throws Exception
-	{
-		DecimalFormat df = new DecimalFormat("000,000,000.#");
-		InputStreamReader reader = null;
-		BufferedReader myInput = null;
-		long begin = 0, end = 0;
-		while (true)
-		{
-			System.out.println("\nPlease write a query and type <return> to continue (CTRL C to exit):");
-			
-			reader = new InputStreamReader(System.in);
-			myInput = new BufferedReader(reader);
-			//String query = myInput.readLine().toString().replace(' ', '_');
-			String query = myInput.readLine().toString();
-			String stem = null;
-			begin = System.nanoTime();
-			stem = stem(query);			
-			end = System.nanoTime();
-			logger.info(query + "\t" + stem + "\t" + df.format(end - begin) + " ns");
-			begin = System.nanoTime();
-			
-		} // end while
-	} // end interactive
-	
-	//
-	public static void main(String args[]) throws Exception
-	{
-		String logConfig = System.getProperty("log-config");
-		if (logConfig == null)
-			logConfig = "log-config.txt";
-		PropertyConfigurator.configure(logConfig);
-		
-		SnowballWrapper myStemmer = SnowballWrapper.getInstance(args[0]);
-		//PorterStemmer porterStemmer = PorterStemmer.getInstance();
-		
-		if (args.length == 1)
-		{
-			//System.out.println("java SnowballWrapper term+");
-			myStemmer.interactive();
-			
-		}
-		
+        return new SnowballWrapper(snowballStemmer);
+    } // end getInstance
+
+    //
+    public String stem(String s) {
+        if (stemmer == null) {
+            return s;
+        }
+
+        stemmer.setCurrent(s);
+        stemmer.stem();
+        return stemmer.getCurrent();
+    } // end stem
+
+    //
+    public String toString() {
+        return "Snowball Stemmer";
+    } // end toString
+
+    //
+    public void interactive() throws Exception {
+        DecimalFormat df = new DecimalFormat("000,000,000.#");
+        InputStreamReader reader = null;
+        BufferedReader myInput = null;
+        long begin = 0, end = 0;
+        while (true) {
+            System.out.println("\nPlease write a query and type <return> to continue (CTRL C to exit):");
+
+            reader = new InputStreamReader(System.in);
+            myInput = new BufferedReader(reader);
+            //String query = myInput.readLine().toString().replace(' ', '_');
+            String query = myInput.readLine().toString();
+            String stem = null;
+            begin = System.nanoTime();
+            stem = stem(query);
+            end = System.nanoTime();
+            logger.info(query + "\t" + stem + "\t" + df.format(end - begin) + " ns");
+            begin = System.nanoTime();
+
+        } // end while
+    } // end interactive
+
+    //
+    public static void main(String args[]) throws Exception {
+        String logConfig = System.getProperty("log-config");
+        if (logConfig == null) {
+            logConfig = "log-config.txt";
+        }
+        PropertyConfigurator.configure(logConfig);
+
+        SnowballWrapper myStemmer = SnowballWrapper.getInstance(args[0]);
+        //PorterStemmer porterStemmer = PorterStemmer.getInstance();
+
+        if (args.length == 1) {
+            //System.out.println("java SnowballWrapper term+");
+            myStemmer.interactive();
+
+        }
+
 /*		for (int i=1;i<args.length;i++)
 		{
 			String stem = stemmer.stem(args[i]);
@@ -159,7 +147,7 @@ public class SnowballWrapper extends AbstractStemmer implements Stemmer
 			}
 		}
 	*/
-		
-	} // end main
-	
+
+    } // end main
+
 } // end class SnowballWrapper

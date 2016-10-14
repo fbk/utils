@@ -12,19 +12,20 @@ import java.util.List;
  * To change this template use File | Settings | File Templates.
  */
 public interface Tokenizer {
-	/**
-	 * Define a static logger variable so that it references the
-	 * Logger instance named <code>Tokenizer</code>.
-	 */
-	static Logger logger = Logger.getLogger(Tokenizer.class.getName());
 
-	public abstract Token[] tokenArray(String text);
+    /**
+     * Define a static logger variable so that it references the
+     * Logger instance named <code>Tokenizer</code>.
+     */
+    static Logger logger = Logger.getLogger(Tokenizer.class.getName());
 
-	public abstract String[] stringArray(String text);
+    public abstract Token[] tokenArray(String text);
 
-	public abstract String tokenizedString(String text);
+    public abstract String[] stringArray(String text);
 
-	public abstract List<Token> tokenList(String text);
+    public abstract String tokenizedString(String text);
 
-	public abstract List<String> stringList(String text);
+    public abstract List<Token> tokenList(String text);
+
+    public abstract List<String> stringList(String text);
 }
