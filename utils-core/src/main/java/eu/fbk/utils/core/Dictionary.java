@@ -74,7 +74,8 @@ public final class Dictionary<T> implements Iterable<T> {
                 } catch (final IllegalAccessException | InstantiationException ex) {
                     throw new Error(ex);
                 } catch (final InvocationTargetException ex) {
-                    throw Throwables.propagate(ex.getCause());
+                    Throwables.throwIfUnchecked(ex.getCause());
+                    throw new RuntimeException(ex.getCause());
                 }
             }
 
@@ -86,8 +87,8 @@ public final class Dictionary<T> implements Iterable<T> {
     }
 
     public static <T> Dictionary<T> create(final Dictionary<T> dictionary) {
-        return new Dictionary<T>(new HashMap<T, Integer>(dictionary.map), new ArrayList<T>(
-                dictionary.list));
+        return new Dictionary<T>(new HashMap<T, Integer>(dictionary.map),
+                new ArrayList<T>(dictionary.list));
     }
 
     public static <T> Dictionary<T> readFrom(final Class<T> elementClass, final Path path)
@@ -189,8 +190,8 @@ public final class Dictionary<T> implements Iterable<T> {
         try {
             return this.list.get(index);
         } catch (final IndexOutOfBoundsException ex) {
-            throw new IllegalArgumentException("No element for index " + index + " (size is "
-                    + size() + ")");
+            throw new IllegalArgumentException(
+                    "No element for index " + index + " (size is " + size() + ")");
         }
     }
 

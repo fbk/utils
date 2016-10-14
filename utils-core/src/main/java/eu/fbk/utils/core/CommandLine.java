@@ -1,20 +1,5 @@
 package eu.fbk.utils.core;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.slf4j.Logger;
-
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,7 +10,29 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+
+import javax.annotation.Nullable;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Ordering;
+
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.slf4j.Logger;
 
 public final class CommandLine {
 
@@ -78,7 +85,7 @@ public final class CommandLine {
     }
 
     public <T> List<T> getOptionValues(final String letterOrName, final Class<T> type) {
-        final List<String> strings = Objects.firstNonNull(this.optionValues.get(letterOrName),
+        final List<String> strings = MoreObjects.firstNonNull(this.optionValues.get(letterOrName),
                 ImmutableList.<String>of());
         return convert(strings, type);
     }
@@ -154,7 +161,8 @@ public final class CommandLine {
                 try {
                     return method.invoke(isStatic ? null : object, args);
                 } catch (final InvocationTargetException ex) {
-                    Throwables.propagate(ex.getCause());
+                    Throwables.throwIfUnchecked(ex.getCause());
+                    throw new RuntimeException(ex.getCause());
                 } catch (final IllegalAccessException ex) {
                     throw new IllegalArgumentException("Cannot invoke " + method, ex);
                 }
@@ -213,7 +221,8 @@ public final class CommandLine {
          * the filename of the script invoking Java, or the base java command for running the
          * application. This information is used to generate the help message.
          *
-         * @param name the application name, possibly null to show nothing
+         * @param name
+         *            the application name, possibly null to show nothing
          * @return this {@code Parser} object, for call chaining
          */
         public Parser withName(@Nullable final String name) {
@@ -224,7 +233,8 @@ public final class CommandLine {
         /**
          * Sets the text to be displayed before the option list in the help message.
          *
-         * @param header the header text, possibly null to show nothing
+         * @param header
+         *            the header text, possibly null to show nothing
          * @return this {@code Parser} object, for call chaining
          */
         public Parser withHeader(@Nullable final String header) {
@@ -235,7 +245,8 @@ public final class CommandLine {
         /**
          * Sets the text to be displayed after the option list in the help message.
          *
-         * @param footer the footer text, possibly null to show nothing
+         * @param footer
+         *            the footer text, possibly null to show nothing
          * @return this {@code Parser} object, for call chaining
          */
         public Parser withFooter(@Nullable final String footer) {
@@ -246,8 +257,9 @@ public final class CommandLine {
         /**
          * Sets the logger object controlled by verbosity level options.
          *
-         * @param logger the controlled logger object, possibly null to disable verbosity level
-         *               options
+         * @param logger
+         *            the controlled logger object, possibly null to disable verbosity level
+         *            options
          * @return this {@code Parser} object, for call chaining
          */
         public Parser withLogger(@Nullable final Logger logger) {
@@ -259,10 +271,13 @@ public final class CommandLine {
          * Defines an option taking zero arguments (a flag). At least one among the short and long
          * name should be specified.
          *
-         * @param shortName   the short name (one letter) associated to the option, if any
-         * @param longname    the long name associated to the option, if any
-         * @param description the description associated to the option, or null to hide the option in the
-         *                    help message
+         * @param shortName
+         *            the short name (one letter) associated to the option, if any
+         * @param longname
+         *            the long name associated to the option, if any
+         * @param description
+         *            the description associated to the option, or null to hide the option in the
+         *            help message
          * @return this {@code Parser} object, for call chaining
          */
         public Parser withOption(@Nullable final String shortName, @Nullable final String longName,
@@ -279,16 +294,24 @@ public final class CommandLine {
         /**
          * Defines an option taking one argument.
          *
-         * @param shortName   the short name (one letter) associated to the option, if any
-         * @param longName    the long name associated to the option, if any
-         * @param description the description associated to the option, or null to hide the option in the
-         *                    help message
-         * @param argName     the name of the argument to display in the help message, mandatory
-         * @param argType     the type associated to the option argument, optional
-         * @param argRequired true if option value(s) are required
-         * @param multiValue  true if the option accepts multiple values
-         * @param mandatory   true if the option and its value must be necessarily specified on the
-         *                    command line
+         * @param shortName
+         *            the short name (one letter) associated to the option, if any
+         * @param longName
+         *            the long name associated to the option, if any
+         * @param description
+         *            the description associated to the option, or null to hide the option in the
+         *            help message
+         * @param argName
+         *            the name of the argument to display in the help message, mandatory
+         * @param argType
+         *            the type associated to the option argument, optional
+         * @param argRequired
+         *            true if option value(s) are required
+         * @param multiValue
+         *            true if the option accepts multiple values
+         * @param mandatory
+         *            true if the option and its value must be necessarily specified on the
+         *            command line
          * @return this {@code Parser} object, for call chaining
          */
         public Parser withOption(@Nullable final String shortName, @Nullable final String longName,
@@ -450,7 +473,7 @@ public final class CommandLine {
                     version = "(unknown)";
                 }
             }
-            final String name = Objects.firstNonNull(this.name, "Version");
+            final String name = MoreObjects.firstNonNull(this.name, "Version");
             System.out.println(String.format("%s %s\nJava %s bit (%s) %s\n", name, version,
                     System.getProperty("sun.arch.data.model"), System.getProperty("java.vendor"),
                     System.getProperty("java.version")));
@@ -459,7 +482,7 @@ public final class CommandLine {
         private void printHelp() {
             final HelpFormatter formatter = new HelpFormatter();
             final PrintWriter out = new PrintWriter(System.out);
-            final String name = Objects.firstNonNull(this.name, "java");
+            final String name = MoreObjects.firstNonNull(this.name, "java");
             formatter.printUsage(out, 80, name, this.options);
             if (this.header != null) {
                 out.println();
@@ -519,11 +542,11 @@ public final class CommandLine {
             return validate(string, this);
         }
 
-        public Class toClass() {
+        public Class<?> toClass() {
             return toClass.get(this);
         }
 
-        public static HashMap<Type, Class> toClass = new HashMap<>();
+        public static HashMap<Type, Class<?>> toClass = new HashMap<>();
 
         static {
             toClass.put(Type.STRING, String.class);

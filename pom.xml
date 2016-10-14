@@ -90,9 +90,10 @@
     </build>
 
     <properties>
+	<google-guava-version>20.0-rc1</google-guava-version>
         <utils-version>${project.version}</utils-version>
         <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+	<maven.compiler.target>1.8</maven.compiler.target>
     </properties>
 
 </project>

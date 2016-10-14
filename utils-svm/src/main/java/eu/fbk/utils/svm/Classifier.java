@@ -48,8 +48,8 @@ public abstract class Classifier {
 
     public final LabelledVector predict(final boolean withProbabilities, final Vector vector) {
         if (!getParameters().getAlgorithm().supportsProbabilities()) {
-            throw new IllegalArgumentException("Probabilities not supported by algorithm "
-                    + getParameters().getAlgorithm());
+            throw new IllegalArgumentException(
+                    "Probabilities not supported by algorithm " + getParameters().getAlgorithm());
         }
         return doPredict(withProbabilities, vector);
     }
@@ -57,8 +57,8 @@ public abstract class Classifier {
     public final List<LabelledVector> predict(final boolean withProbabilities,
             final Iterable<? extends Vector> vectors) {
         if (withProbabilities && !getParameters().getAlgorithm().supportsProbabilities()) {
-            throw new IllegalArgumentException("Probabilities not supported by algorithm "
-                    + getParameters().getAlgorithm());
+            throw new IllegalArgumentException(
+                    "Probabilities not supported by algorithm " + getParameters().getAlgorithm());
         }
         return doPredict(withProbabilities, vectors);
     }
@@ -139,8 +139,8 @@ public abstract class Classifier {
             } else if (implementationClass.equals(LibSvmClassifier.class)) {
                 return LibSvmClassifier.doRead(parameters, p);
             } else {
-                throw new IllegalArgumentException("No suitable implementation for parameters "
-                        + parameters);
+                throw new IllegalArgumentException(
+                        "No suitable implementation for parameters " + parameters);
             }
 
         } finally {
@@ -159,14 +159,15 @@ public abstract class Classifier {
         } else if (implementationClass.equals(LibSvmClassifier.class)) {
             return LibSvmClassifier.doTrain(parameters, trainingSet);
         } else {
-            throw new IllegalArgumentException("No suitable implementation for parameters "
-                    + parameters);
+            throw new IllegalArgumentException(
+                    "No suitable implementation for parameters " + parameters);
         }
     }
 
     public static Classifier train(final Iterable<Parameters> parametersGrid,
             final Iterable<LabelledVector> trainingSet,
-            final Comparator<ConfusionMatrix> comparator, final int maxVectors) throws IOException {
+            final Comparator<ConfusionMatrix> comparator, final int maxVectors)
+            throws IOException {
 
         Preconditions.checkArgument(Iterables.size(trainingSet) > 0, "No training examples");
 
@@ -176,8 +177,8 @@ public abstract class Classifier {
 
         final AtomicInteger index = new AtomicInteger(0);
         final List<ListenableFuture<?>> futures = Lists.newArrayList();
-        final ListeningExecutorService executor = MoreExecutors.listeningDecorator(Environment
-                .getPool());
+        final ListeningExecutorService executor = MoreExecutors
+                .listeningDecorator(Environment.getPool());
         for (int i = 0; i < Environment.getCores() / 2; ++i) {
             futures.add(executor.submit(new Callable<Object>() {
 
@@ -200,13 +201,13 @@ public abstract class Classifier {
 
             }));
         }
-        Futures.get(Futures.allAsList(futures), IOException.class);
+        Futures.getChecked(Futures.allAsList(futures), IOException.class);
 
         final ConfusionMatrix bestMatrix = Ordering.from(comparator).min(map.keySet());
         final Parameters bestParameters = map.get(bestMatrix);
         LOGGER.debug("Best parameter combination: {}", bestParameters);
-        final Classifier bestClassifier = train(bestParameters, Ordering.natural()
-                .immutableSortedCopy(trainingSet));
+        final Classifier bestClassifier = train(bestParameters,
+                Ordering.natural().immutableSortedCopy(trainingSet));
         return bestClassifier;
     }
 
@@ -230,9 +231,9 @@ public abstract class Classifier {
         final List<Iterable<LabelledVector>> partitionList = ImmutableList.copyOf(partitions);
         final List<ListenableFuture<ConfusionMatrix>> futures = Lists.newArrayList();
 
-        final ListeningExecutorService executor = size > 200000 ? MoreExecutors
-                .newDirectExecutorService() : MoreExecutors.listeningDecorator(Environment
-                .getPool());
+        final ListeningExecutorService executor = size > 200000
+                ? MoreExecutors.newDirectExecutorService()
+                : MoreExecutors.listeningDecorator(Environment.getPool());
 
         for (int i = 0; i < partitionList.size(); ++i) {
             final int index = i;
@@ -256,7 +257,8 @@ public abstract class Classifier {
             }));
         }
 
-        return ConfusionMatrix.sum(Futures.get(Futures.allAsList(futures), IOException.class));
+        return ConfusionMatrix
+                .sum(Futures.getChecked(Futures.allAsList(futures), IOException.class));
     }
 
     @Nullable
@@ -270,7 +272,8 @@ public abstract class Classifier {
         }
     }
 
-    private static String computeHash(final Dictionary<String> dictionary, final String modelString) {
+    private static String computeHash(final Dictionary<String> dictionary,
+            final String modelString) {
         final StringBuilder builder = new StringBuilder(modelString);
         for (final String feature : dictionary) {
             builder.append('\n').append(feature);
@@ -292,8 +295,8 @@ public abstract class Classifier {
             final Iterable<String> args, final boolean suppressOutput) throws IOException {
 
         // Invoke LIBSVM
-        final List<String> command = new ArrayList<String>(Arrays.asList(Environment.getProperty(
-                "cmd." + program.replace('-', '.'), program).split("\\s+")));
+        final List<String> command = new ArrayList<String>(Arrays.asList(Environment
+                .getProperty("cmd." + program.replace('-', '.'), program).split("\\s+")));
         Iterables.addAll(command, args);
         final ProcessBuilder processBuilder = new ProcessBuilder(command);
         // processBuilder.environment().put("OMP_NUM_THREADS",
@@ -306,8 +309,8 @@ public abstract class Classifier {
 
                 @Override
                 public void run() {
-                    final BufferedReader in = new BufferedReader(new InputStreamReader(process
-                            .getErrorStream(), Charset.forName("UTF-8")));
+                    final BufferedReader in = new BufferedReader(new InputStreamReader(
+                            process.getErrorStream(), Charset.forName("UTF-8")));
                     try {
                         String line;
                         while ((line = in.readLine()) != null) {
@@ -324,8 +327,8 @@ public abstract class Classifier {
 
             // Log LIBSVM output at DEBUG level and parse key = value bindings in it
             final Map<String, Float> result = Maps.newHashMap();
-            final BufferedReader in = new BufferedReader(new InputStreamReader(
-                    process.getInputStream(), Charset.forName("UTF-8")));
+            final BufferedReader in = new BufferedReader(
+                    new InputStreamReader(process.getInputStream(), Charset.forName("UTF-8")));
             String line;
             while ((line = in.readLine()) != null) {
                 if (!suppressOutput) {
@@ -343,8 +346,8 @@ public abstract class Classifier {
                             if (last || nonDigit) {
                                 final int endIndex = last && !nonDigit ? i + 1 : i;
                                 final String key = line.substring(startIndex, equalIndex).trim();
-                                final float value = Float.parseFloat(line.substring(
-                                        equalIndex + 1, endIndex).trim());
+                                final float value = Float.parseFloat(
+                                        line.substring(equalIndex + 1, endIndex).trim());
                                 result.put(key, value);
                                 startIndex = -1;
                                 equalIndex = -1;
@@ -427,52 +430,52 @@ public abstract class Classifier {
 
             this.bias = algorithm.isLinear() ? bias != null ? bias : DEFAULT_BIAS : null;
             this.dual = algorithm == Algorithm.LINEAR_L2LOSS_L2REG
-                    || algorithm == Algorithm.LINEAR_LRLOSS_L2REG ? dual != null ? dual
-                    : DEFAULT_DUAL : null;
+                    || algorithm == Algorithm.LINEAR_LRLOSS_L2REG
+                            ? dual != null ? dual : DEFAULT_DUAL : null;
             this.gamma = algorithm == Algorithm.SVM_POLY_KERNEL
                     || algorithm == Algorithm.SVM_RBF_KERNEL
-                    || algorithm == Algorithm.SVM_SIGMOID_KERNEL ? gamma != null ? gamma
-                    : DEFAULT_GAMMA : null;
+                    || algorithm == Algorithm.SVM_SIGMOID_KERNEL
+                            ? gamma != null ? gamma : DEFAULT_GAMMA : null;
             this.coeff = algorithm == Algorithm.SVM_POLY_KERNEL
-                    || algorithm == Algorithm.SVM_SIGMOID_KERNEL ? coeff != null ? coeff
-                    : DEFAULT_COEFF : null;
-            this.degree = algorithm == Algorithm.SVM_POLY_KERNEL ? degree != null ? degree
-                    : DEFAULT_DEGREE : null;
+                    || algorithm == Algorithm.SVM_SIGMOID_KERNEL
+                            ? coeff != null ? coeff : DEFAULT_COEFF : null;
+            this.degree = algorithm == Algorithm.SVM_POLY_KERNEL
+                    ? degree != null ? degree : DEFAULT_DEGREE : null;
         }
 
         public static Parameters forLinearLRLossL1Reg(final int numLabels,
                 @Nullable final float[] weights, @Nullable final Float c,
                 @Nullable final Float bias) {
-            return new Parameters(Algorithm.LINEAR_LRLOSS_L1REG, numLabels, weights, c, bias,
-                    null, null, null, null);
+            return new Parameters(Algorithm.LINEAR_LRLOSS_L1REG, numLabels, weights, c, bias, null,
+                    null, null, null);
         }
 
         public static Parameters forLinearLRLossL2Reg(final int numLabels,
                 @Nullable final float[] weights, @Nullable final Float c,
                 @Nullable final Float bias, @Nullable final Boolean dual) {
-            return new Parameters(Algorithm.LINEAR_LRLOSS_L2REG, numLabels, weights, c, bias,
-                    dual, null, null, null);
+            return new Parameters(Algorithm.LINEAR_LRLOSS_L2REG, numLabels, weights, c, bias, dual,
+                    null, null, null);
         }
 
         public static Parameters forLinearL2LossL1Reg(final int numLabels,
                 @Nullable final float[] weights, @Nullable final Float c,
                 @Nullable final Float bias) {
-            return new Parameters(Algorithm.LINEAR_L2LOSS_L1REG, numLabels, weights, c, bias,
-                    null, null, null, null);
+            return new Parameters(Algorithm.LINEAR_L2LOSS_L1REG, numLabels, weights, c, bias, null,
+                    null, null, null);
         }
 
         public static Parameters forLinearL2LossL2Reg(final int numLabels,
                 @Nullable final float[] weights, @Nullable final Float c,
                 @Nullable final Float bias, @Nullable final Boolean dual) {
-            return new Parameters(Algorithm.LINEAR_L2LOSS_L2REG, numLabels, weights, c, bias,
-                    dual, null, null, null);
+            return new Parameters(Algorithm.LINEAR_L2LOSS_L2REG, numLabels, weights, c, bias, dual,
+                    null, null, null);
         }
 
         public static Parameters forLinearL1LossL2Reg(final int numLabels,
                 @Nullable final float[] weights, @Nullable final Float c,
                 @Nullable final Float bias) {
-            return new Parameters(Algorithm.LINEAR_L1LOSS_L2REG, numLabels, weights, c, bias,
-                    null, null, null, null);
+            return new Parameters(Algorithm.LINEAR_L1LOSS_L2REG, numLabels, weights, c, bias, null,
+                    null, null, null);
         }
 
         public static Parameters forSVMLinearKernel(final int numLabels,
@@ -507,8 +510,8 @@ public abstract class Classifier {
                 @Nullable final String prefix) {
             final Properties p = properties;
             final String pr = prefix != null ? prefix : "";
-            final Algorithm algorithm = Algorithm.valueOf(p.getProperty(pr + "algorithm")
-                    .toUpperCase());
+            final Algorithm algorithm = Algorithm
+                    .valueOf(p.getProperty(pr + "algorithm").toUpperCase());
             final int numLabels = Integer.parseInt(p.getProperty(pr + "numLabels"));
             final float c = Float.parseFloat(p.getProperty(pr + "c"));
             final Float bias = Statements.convert(p.getProperty(pr + "bias"), Float.class);
@@ -520,8 +523,8 @@ public abstract class Classifier {
             if (p.containsKey(pr + "weight.0")) {
                 weights = new float[numLabels];
                 for (int i = 0; i < numLabels; ++i) {
-                    weights[i] = Statements
-                            .convert(p.getProperty(pr + "weight." + i), Float.class);
+                    weights[i] = Statements.convert(p.getProperty(pr + "weight." + i),
+                            Float.class);
                 }
             }
             return new Parameters(algorithm, numLabels, weights, c, bias, dual, gamma, coeff,
@@ -573,8 +576,8 @@ public abstract class Classifier {
         public List<Parameters> grid(final int maxCombinations, final float multiplier) {
 
             // Enumerate C values
-            final int nc = this.gamma == null && (this.bias == null || this.bias < 0) ? maxCombinations
-                    : (int) Math.sqrt(maxCombinations);
+            final int nc = this.gamma == null && (this.bias == null || this.bias < 0)
+                    ? maxCombinations : (int) Math.sqrt(maxCombinations);
             final List<Float> cs = Lists.newArrayList(this.c);
             float m = multiplier;
             while (cs.size() < nc && m <= 10000000) {
@@ -643,8 +646,7 @@ public abstract class Classifier {
             final Parameters other = (Parameters) object;
             return this.algorithm == other.algorithm && this.numLabels == other.numLabels
                     && Arrays.equals(this.weights, other.weights) && this.c == other.c
-                    && Objects.equal(this.bias, other.bias)
-                    && Objects.equal(this.dual, other.dual)
+                    && Objects.equal(this.bias, other.bias) && Objects.equal(this.dual, other.dual)
                     && Objects.equal(this.gamma, other.gamma)
                     && Objects.equal(this.coeff, other.coeff)
                     && Objects.equal(this.degree, other.degree);
@@ -956,8 +958,9 @@ public abstract class Classifier {
                 parameter = new Parameter(SolverType.L1R_L2LOSS_SVC, c, 0.01f);
                 break;
             case LINEAR_L2LOSS_L2REG:
-                parameter = new Parameter(dual ? SolverType.L2R_L2LOSS_SVC_DUAL
-                        : SolverType.L2R_L2LOSS_SVC, c, dual ? 0.1f : 0.01f);
+                parameter = new Parameter(
+                        dual ? SolverType.L2R_L2LOSS_SVC_DUAL : SolverType.L2R_L2LOSS_SVC, c,
+                        dual ? 0.1f : 0.01f);
                 break;
             case LINEAR_L1LOSS_L2REG:
                 parameter = new Parameter(SolverType.L2R_L1LOSS_SVC_DUAL, c, 0.1f);
@@ -1103,8 +1106,8 @@ public abstract class Classifier {
             // Read the model
             final String modelString = new String(Files.readAllBytes(path.resolve("model")),
                     Charsets.UTF_8);
-            final svm_model model = svm.svm_load_model(new BufferedReader(new StringReader(
-                    modelString)));
+            final svm_model model = svm
+                    .svm_load_model(new BufferedReader(new StringReader(modelString)));
 
             // Compute model hash
             final String modelHash = computeHash(dictionary, modelString);
@@ -1143,8 +1146,8 @@ public abstract class Classifier {
             final String modelString = com.google.common.io.Files.toString(tmpFile,
                     Charset.defaultCharset());
             final String modelHash = computeHash(dictionary, modelString);
-            final svm_model reloadedModel = svm.svm_load_model(new BufferedReader(
-                    new StringReader(modelString)));
+            final svm_model reloadedModel = svm
+                    .svm_load_model(new BufferedReader(new StringReader(modelString)));
             tmpFile.delete();
 
             // Build and return the SVM object
@@ -1214,8 +1217,8 @@ public abstract class Classifier {
             final String modelString = com.google.common.io.Files.toString(modelFile,
                     Charset.defaultCharset());
             final String modelHash = computeHash(dictionary, modelString);
-            final svm_model model = svm.svm_load_model(new BufferedReader(new StringReader(
-                    modelString)));
+            final svm_model model = svm
+                    .svm_load_model(new BufferedReader(new StringReader(modelString)));
 
             // Delete temporary files
             trainingFile.delete();
