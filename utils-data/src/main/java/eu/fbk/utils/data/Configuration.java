@@ -11,7 +11,7 @@ import java.util.Properties;
  * @author Yaroslav Nechaev (remper@me.com)
  */
 public class Configuration {
-    protected URL repository = Configuration.class.getResource("/eu/fbk/utils/data/repository.yml");
+    protected URL repository = Configuration.class.getResource("/data/repository.yml");
     protected File storage = new File(System.getProperty("user.home") + "/.fbkdata");
 
     public void loadFromProperties(Properties properties) throws MalformedURLException {
