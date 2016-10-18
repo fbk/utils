@@ -21,6 +21,7 @@
         <module>utils-lsa</module>
         <module>utils-math</module>
         <module>utils-mylibsvm</module>
+        <module>utils-data</module>
     </modules>
 
     <parent>

@@ -342,6 +342,10 @@ public final class PrecisionRecall implements Serializable {
             return this;
         }
 
+        public Evaluator addTP() {
+            return addTP(1.0);
+        }
+
         public Evaluator addFP(final double deltaFP) {
             checkNotNegative(deltaFP);
             if (deltaFP != 0.0) {
@@ -351,6 +355,10 @@ public final class PrecisionRecall implements Serializable {
                 }
             }
             return this;
+        }
+
+        public Evaluator addFP() {
+            return addFP(1.0);
         }
 
         public Evaluator addFN(final double deltaFN) {
@@ -364,6 +372,10 @@ public final class PrecisionRecall implements Serializable {
             return this;
         }
 
+        public Evaluator addFN() {
+            return addFN(1.0);
+        }
+
         public Evaluator addTN(final double deltaTN) {
             checkNotNegative(deltaTN);
             if (deltaTN != 0.0) {
@@ -373,6 +385,10 @@ public final class PrecisionRecall implements Serializable {
                 }
             }
             return this;
+        }
+
+        public Evaluator addTN() {
+            return addTN(1.0);
         }
 
         public synchronized PrecisionRecall getResult() {
