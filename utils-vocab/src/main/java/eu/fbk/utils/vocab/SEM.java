@@ -7,7 +7,7 @@ import org.openrdf.model.impl.ValueFactoryImpl;
 
 /**
  * Constants for the Simple Event Model (SEM) Ontology.
- * 
+ *
  * @see <a href="http://semanticweb.cs.vu.nl/2009/11/sem/">vocabulary specification</a>
  */
 public final class SEM {

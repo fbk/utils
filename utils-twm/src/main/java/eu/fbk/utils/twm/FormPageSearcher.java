@@ -14,27 +14,19 @@
 
 package eu.fbk.utils.twm;
 
-import java.io.IOException;
-import java.util.Arrays;
-
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
+import org.apache.commons.cli.*;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+
+import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * Created with IntelliJ IDEA. User: giuliano Date: 1/22/13 Time: 6:05 PM To change this template
  * use File | Settings | File Templates.
- *
+ * <p>
  * java -cp dist/thewikimachine.jar org.fbk.cit.hlt.thewikimachine.index.FormPageSearcher -i
  * /data/models/wikipedia/en/20130604/enwiki-20130604-form-page-index/ -t
- *
  */
 public class FormPageSearcher extends FreqSetSearcher {
 

@@ -1,13 +1,15 @@
 package eu.fbk.utils.core;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
-import com.google.common.base.Throwables;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nullable;
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FilterOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.Writer;
 import java.lang.ProcessBuilder.Redirect;
 import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
@@ -20,12 +22,28 @@ import java.nio.channels.FileLock;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.annotation.Nullable;
+
+import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
+import com.google.common.base.Throwables;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // note on buffered stream thread safety: they are not thread safe and are expected to be used by
 // a single thread, with the exception of method close() which can be called concurrently by other
@@ -103,14 +121,18 @@ public final class IO {
      * is asked, only the first call may succeed (if lock is not owned by another process) while
      * successive calls will fail.
      *
-     * @param path    the path to the lock file, not null (the lock file is created if it does not
-     *                exist)
-     * @param shared  true if the lock should be acquired in a shared mode
-     * @param lenient true if null should be returned in case the lock cannot be acquired (otherwise,
-     *                an {@link IllegalStateException} is thrown)
+     * @param path
+     *            the path to the lock file, not null (the lock file is created if it does not
+     *            exist)
+     * @param shared
+     *            true if the lock should be acquired in a shared mode
+     * @param lenient
+     *            true if null should be returned in case the lock cannot be acquired (otherwise,
+     *            an {@link IllegalStateException} is thrown)
      * @return the acquired lock object, if successful
-     * @throws IOException in case the lock file cannot be created, read, or written, or for any other IO
-     *                     error
+     * @throws IOException
+     *             in case the lock file cannot be created, read, or written, or for any other IO
+     *             error
      */
     @Nullable
     public static FileLock tryLock(final Path path, final boolean shared, final boolean lenient)
@@ -142,8 +164,9 @@ public final class IO {
                     }
                 } catch (final Throwable ex) {
                     LOCK_DATA.remove(path);
-                    Throwables.propagateIfPossible(ex, IOException.class);
-                    throw Throwables.propagate(ex);
+                    Throwables.throwIfInstanceOf(ex, IOException.class);
+                    Throwables.throwIfUnchecked(ex);
+                    throw new RuntimeException(ex);
                 }
 
             } else {
@@ -265,11 +288,11 @@ public final class IO {
     }
 
     public static String extractType(final String location) {
-        String ext = extractExtension(location);
-        String[] parts = ext.split("\\.+");
+        final String ext = extractExtension(location);
+        final String[] parts = ext.split("\\.+");
         String last = null;
         for (int i = parts.length - 1; i >= 0; i--) {
-            String part = parts[i];
+            final String part = parts[i];
             if (compressedExtensions.contains("." + part)) {
                 continue;
             }

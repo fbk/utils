@@ -1,24 +1,14 @@
 package eu.fbk.utils.eval;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.*;
+import eu.fbk.utils.core.CommandLine;
+
+import javax.annotation.Nullable;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-
-import javax.annotation.Nullable;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Ordering;
-
-import eu.fbk.utils.core.CommandLine;
+import java.util.*;
 
 public class RankingScore implements Serializable {
 
@@ -444,12 +434,9 @@ public class RankingScore implements Serializable {
         /**
          * Internal method used to update the scores.
          *
-         * @param ranking
-         *            the ranking returned by the system, not null
-         * @param relItems
-         *            the set of gold relevant items, not null
-         * @param rels
-         *            the gold relevance scores, null if not available
+         * @param ranking  the ranking returned by the system, not null
+         * @param relItems the set of gold relevant items, not null
+         * @param rels     the gold relevance scores, null if not available
          */
         private <T> void update(final Iterable<T> ranking, final Set<T> relItems,
                 @Nullable final Map<T, Double> rels) {

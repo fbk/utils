@@ -20,7 +20,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -85,7 +85,7 @@ public final class CommandLine {
     }
 
     public <T> List<T> getOptionValues(final String letterOrName, final Class<T> type) {
-        final List<String> strings = Objects.firstNonNull(this.optionValues.get(letterOrName),
+        final List<String> strings = MoreObjects.firstNonNull(this.optionValues.get(letterOrName),
                 ImmutableList.<String>of());
         return convert(strings, type);
     }
@@ -161,7 +161,8 @@ public final class CommandLine {
                 try {
                     return method.invoke(isStatic ? null : object, args);
                 } catch (final InvocationTargetException ex) {
-                    Throwables.propagate(ex.getCause());
+                    Throwables.throwIfUnchecked(ex.getCause());
+                    throw new RuntimeException(ex.getCause());
                 } catch (final IllegalAccessException ex) {
                     throw new IllegalArgumentException("Cannot invoke " + method, ex);
                 }
@@ -344,7 +345,6 @@ public final class CommandLine {
             try {
                 // Add additional options
                 if (this.logger != null) {
-                    // TODO: verbosity levels
                     this.options.addOption(null, "debug", false, "enable verbose output");
                     this.options.addOption(null, "trace", false, "enable very verbose output");
                 }
@@ -365,7 +365,6 @@ public final class CommandLine {
 
                 try {
                     // Handle verbose mode via reflection, depending on the SLF4J backend used
-                    // TODO: verbosity levels
                     final String loggerClassName = this.logger.getClass().getName();
                     if (loggerClassName.equals("ch.qos.logback.classic.Logger")) {
                         final Class<?> levelClass = Class.forName("ch.qos.logback.classic.Level");
@@ -377,6 +376,19 @@ public final class CommandLine {
                         final Object level = call(levelClass, "valueOf", cmd.hasOption("trace")
                                 ? "TRACE" : cmd.hasOption("debug") ? "DEBUG" : "INFO");
                         call(this.logger, "setLevel", level);
+                    } else if (loggerClassName.equals("org.apache.logging.slf4j.Log4jLogger")) {
+                        final Class<?> managerClass = Class
+                                .forName("org.apache.logging.log4j.LogManager");
+                        final Object ctx = call(managerClass, "getContext", false);
+                        final Object config = call(ctx, "getConfiguration");
+                        final Object logConfig = call(config, "getLoggerConfig",
+                                this.logger.getName());
+                        final Class<?> levelClass = Class
+                                .forName("org.apache.logging.log4j.Level");
+                        final Object level = call(levelClass, "valueOf", cmd.hasOption("trace")
+                                ? "TRACE" : cmd.hasOption("debug") ? "DEBUG" : "INFO");
+                        call(logConfig, "setLevel", level);
+                        call(ctx, "updateLoggers");
                     }
 
                 } catch (final Throwable ex) {
@@ -461,7 +473,7 @@ public final class CommandLine {
                     version = "(unknown)";
                 }
             }
-            final String name = Objects.firstNonNull(this.name, "Version");
+            final String name = MoreObjects.firstNonNull(this.name, "Version");
             System.out.println(String.format("%s %s\nJava %s bit (%s) %s\n", name, version,
                     System.getProperty("sun.arch.data.model"), System.getProperty("java.vendor"),
                     System.getProperty("java.version")));
@@ -470,7 +482,7 @@ public final class CommandLine {
         private void printHelp() {
             final HelpFormatter formatter = new HelpFormatter();
             final PrintWriter out = new PrintWriter(System.out);
-            final String name = Objects.firstNonNull(this.name, "java");
+            final String name = MoreObjects.firstNonNull(this.name, "java");
             formatter.printUsage(out, 80, name, this.options);
             if (this.header != null) {
                 out.println();
@@ -530,11 +542,12 @@ public final class CommandLine {
             return validate(string, this);
         }
 
-        public Class toClass() {
+        public Class<?> toClass() {
             return toClass.get(this);
         }
 
-        public static HashMap<Type, Class> toClass = new HashMap<>();
+        public static HashMap<Type, Class<?>> toClass = new HashMap<>();
+
         static {
             toClass.put(Type.STRING, String.class);
 

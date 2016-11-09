@@ -1,14 +1,14 @@
 package eu.fbk.utils.twm;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-
 import eu.fbk.utils.core.CommandLine;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.slf4j.LoggerFactory;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 /**
  * Created by alessio on 26/05/15.

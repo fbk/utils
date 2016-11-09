@@ -14,11 +14,11 @@ package eu.fbk.utils.core;
  * limitations under the License.
  */
 
+import com.google.common.base.Charsets;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.CharBuffer;
-
-import com.google.common.base.Charsets;
 
 /**
  * Smaz class for compression small strings. Port to java from
@@ -162,7 +162,7 @@ final class Smaz {
                 while (slotLength > 0 && slotEndIndex <= slotLength) {
                     if (slot.get(slotIndex) == j && inlen >= j
                             && slot.subSequence(slotIndex + 1, slotEndIndex).toString()
-                                    .equals(charBuffer.subSequence(0, j).toString())) {
+                            .equals(charBuffer.subSequence(0, j).toString())) {
                         // Match found in codebook
                         // Add verbatim data if needed
                         if (verb.length() > 0) {

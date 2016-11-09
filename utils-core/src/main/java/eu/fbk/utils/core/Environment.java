@@ -236,7 +236,8 @@ public final class Environment {
                 throw exception.get();
             }
         } catch (final Throwable ex) {
-            Throwables.propagate(ex);
+            Throwables.throwIfUnchecked(ex);
+            throw new RuntimeException(ex);
         }
     }
 
@@ -358,8 +359,8 @@ public final class Environment {
                     return baseClass.cast(plugin.factory.invoke(null, name, args));
                 } catch (final IllegalAccessException ex) {
                     throw new Error("Unexpected error (!)", ex); // checked when
-                                                                 // loading
-                                                                 // plugins
+                    // loading
+                    // plugins
                 } catch (final InvocationTargetException ex) {
                     final Throwable cause = ex.getCause();
                     throw cause instanceof RuntimeException ? (RuntimeException) cause

@@ -1,9 +1,8 @@
 package eu.fbk.utils.core;
 
+import eu.fbk.utils.core.CommandLine.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import eu.fbk.utils.core.CommandLine.Type;
 
 public class CommandLineTest {
 

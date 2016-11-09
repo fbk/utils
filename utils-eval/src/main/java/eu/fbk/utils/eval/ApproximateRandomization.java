@@ -50,7 +50,9 @@ public class ApproximateRandomization {
         double bs = calculateScore(a);
         double ps = calculateScore(b);
         double d = Math.abs(ps - bs);
-        LOGGER.debug("Original score bs, ps, d: " + formatter.format(bs * 100) + "%, " + formatter.format(ps * 100) + "%, " + formatter.format(d * 100) + "%");
+        LOGGER.debug(
+                "Original score bs, ps, d: " + formatter.format(bs * 100) + "%, " + formatter.format(ps * 100) + "%, "
+                        + formatter.format(d * 100) + "%");
 
         double p = 0;
         double mean = 0;

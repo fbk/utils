@@ -14,14 +14,14 @@
 
 package eu.fbk.utils.twm;
 
-import java.io.File;
-import java.io.IOException;
-
 import org.apache.log4j.Logger;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.FSDirectory;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Created with IntelliJ IDEA. User: giuliano Date: 1/22/13 Time: 6:05 PM To change this template

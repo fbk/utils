@@ -1,10 +1,10 @@
 package eu.fbk.utils.eval;
 
-import java.io.Serializable;
-import java.util.Objects;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Ordering;
+
+import java.io.Serializable;
+import java.util.Objects;
 
 public final class PrecisionRecall implements Serializable {
 
@@ -69,14 +69,10 @@ public final class PrecisionRecall implements Serializable {
      * accuracy a, and count value. The method tries to recover the missing TP, FP, FN and TN
      * values, assigning them the value NaN where recovery is not possible.
      *
-     * @param precision
-     *            the precision value
-     * @param recall
-     *            the recall value
-     * @param accuracy
-     *            the accuracy value
-     * @param count
-     *            the count value
+     * @param precision the precision value
+     * @param recall    the recall value
+     * @param accuracy  the accuracy value
+     * @param count     the count value
      * @return the corresponding {@code PrecisionRecall} object
      */
     public static PrecisionRecall forMeasures(final double precision, final double recall,
@@ -346,6 +342,10 @@ public final class PrecisionRecall implements Serializable {
             return this;
         }
 
+        public Evaluator addTP() {
+            return addTP(1.0);
+        }
+
         public Evaluator addFP(final double deltaFP) {
             checkNotNegative(deltaFP);
             if (deltaFP != 0.0) {
@@ -355,6 +355,10 @@ public final class PrecisionRecall implements Serializable {
                 }
             }
             return this;
+        }
+
+        public Evaluator addFP() {
+            return addFP(1.0);
         }
 
         public Evaluator addFN(final double deltaFN) {
@@ -368,6 +372,10 @@ public final class PrecisionRecall implements Serializable {
             return this;
         }
 
+        public Evaluator addFN() {
+            return addFN(1.0);
+        }
+
         public Evaluator addTN(final double deltaTN) {
             checkNotNegative(deltaTN);
             if (deltaTN != 0.0) {
@@ -377,6 +385,10 @@ public final class PrecisionRecall implements Serializable {
                 }
             }
             return this;
+        }
+
+        public Evaluator addTN() {
+            return addTN(1.0);
         }
 
         public synchronized PrecisionRecall getResult() {
