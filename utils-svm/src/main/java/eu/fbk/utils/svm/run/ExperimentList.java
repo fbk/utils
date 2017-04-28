@@ -62,7 +62,11 @@ public class ExperimentList {
 
             File experimentsFile = cmd.getOptionValue("experiments", File.class);
             List<String> configLines = Files.readAllLines(experimentsFile.toPath());
-            for (String configLine : configLines) {
+            for (int i1 = 0; i1 < configLines.size(); i1++) {
+                String configLine = configLines.get(i1);
+
+                System.out.println(String.format("Line %d/%d", i1 + 1, configLines.size()));
+                
                 configLine = configLine.trim();
                 if (configLine.startsWith("#")) {
                     continue;
