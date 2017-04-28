@@ -1,3 +1,5 @@
+package eu.fbk.utils.svm.run;
+
 import eu.fbk.utils.core.CommandLine;
 import eu.fbk.utils.eval.ConfusionMatrix;
 import eu.fbk.utils.svm.Classifier;
