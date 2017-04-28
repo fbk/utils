@@ -16,15 +16,29 @@ public abstract class Vector implements Serializable, Comparable<Vector> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Vector.class);
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
+    final private String id;
+
+    Vector(String id) {
+        this.id = id;
+    }
+
+    final public String getId() {
+        return id;
+    }
 
     static Vector create(@Nullable final Map<String, Float> map) {
+        return create(map, null);
+    }
+
+    static Vector create(@Nullable final Map<String, Float> map, @Nullable String id) {
         final int size = map == null ? 0 : map.size();
+        Vector ret;
         if (size == 0) {
-            return Vector0.INSTANCE;
+            ret = new Vector0(id);
         } else if (size == 1) {
             final Map.Entry<String, Float> entry = map.entrySet().iterator().next();
-            return new Vector1(entry.getKey().intern(), entry.getValue());
+            ret = new Vector1(entry.getKey().intern(), entry.getValue(), id);
         } else {
             final String[] features = map.keySet().toArray(new String[size]);
             Arrays.sort(features);
@@ -35,8 +49,10 @@ public abstract class Vector implements Serializable, Comparable<Vector> {
                 values[i] = map.get(features[i]);
                 allOnes &= values[i] == 1.0f;
             }
-            return allOnes ? new VectorAllOnes(features) : new VectorN(features, values);
+            ret = allOnes ? new VectorAllOnes(features, id) : new VectorN(features, values, id);
         }
+
+        return ret;
     }
 
     abstract int doSize();
@@ -46,7 +62,12 @@ public abstract class Vector implements Serializable, Comparable<Vector> {
     abstract float doGetValue(int index);
 
     LabelledVector doLabel(final int label, final float... probabilities) {
-        return LabelledVector.create(unlabel(), label, probabilities);
+//        System.out.println(this.getId());
+        Vector unlabel = unlabel();
+//        System.out.println(unlabel.getId());
+//        System.out.println();
+        LabelledVector ret = LabelledVector.create(unlabel, label, probabilities);
+        return ret;
     }
 
     Vector doUnlabel() {
@@ -464,6 +485,7 @@ public abstract class Vector implements Serializable, Comparable<Vector> {
 
         @Nullable
         private Vector vector;
+        private String id;
 
         @Nullable
         private Map<String, Float> map;
@@ -485,6 +507,11 @@ public abstract class Vector implements Serializable, Comparable<Vector> {
                 return this.vector.getValue(actualFeature);
             }
             return 0.0f;
+        }
+
+        public Builder setID(final String id) {
+            this.id = id;
+            return this;
         }
 
         public Builder set(final String feature, final float value) {
@@ -566,16 +593,18 @@ public abstract class Vector implements Serializable, Comparable<Vector> {
         }
 
         public Vector build() {
-            return this.vector != null ? this.vector : create(this.map);
+            return this.vector != null ? this.vector : create(this.map, id);
         }
 
     }
 
     private static final class Vector0 extends Vector {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 2L;
 
-        private static final Vector0 INSTANCE = new Vector0();
+        Vector0(@Nullable String id) {
+            super(id);
+        }
 
         @Override
         int doSize() {
@@ -596,13 +625,18 @@ public abstract class Vector implements Serializable, Comparable<Vector> {
 
     private static final class Vector1 extends Vector {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 2L;
 
         private final String feature;
 
         private final float value;
 
         Vector1(final String feature, final float value) {
+            this(feature, value, null);
+        }
+
+        Vector1(final String feature, final float value, @Nullable String id) {
+            super(id);
             this.feature = feature;
             this.value = value;
         }
@@ -632,13 +666,18 @@ public abstract class Vector implements Serializable, Comparable<Vector> {
 
     private static final class VectorN extends Vector {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 2L;
 
         private final String[] features;
 
         private final float[] values;
 
         VectorN(final String[] features, final float[] values) {
+            this(features, values, null);
+        }
+
+        VectorN(final String[] features, final float[] values, String id) {
+            super(id);
             this.features = features;
             this.values = values;
         }
@@ -662,11 +701,16 @@ public abstract class Vector implements Serializable, Comparable<Vector> {
 
     private static final class VectorAllOnes extends Vector {
 
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 2L;
 
         private final String[] features;
 
         VectorAllOnes(final String[] features) {
+            this(features, null);
+        }
+
+        VectorAllOnes(final String[] features, @Nullable String id) {
+            super(id);
             this.features = features;
         }
 

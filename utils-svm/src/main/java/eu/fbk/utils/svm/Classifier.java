@@ -212,16 +212,37 @@ public abstract class Classifier {
     }
 
     public static ConfusionMatrix crossValidate(final Parameters parameters,
+            final Iterable<LabelledVector> trainingSet, final int numPartitions) throws IOException {
+        return crossValidate(parameters, trainingSet, numPartitions, null);
+    }
+
+    public static ConfusionMatrix crossValidate(final Parameters parameters,
+            final Iterable<LabelledVector> trainingSet, final int numPartitions, @Nullable Map<String, Integer> results) throws IOException {
+        return crossValidate(parameters, trainingSet, numPartitions, results, Integer.MAX_VALUE);
+    }
+
+    public static ConfusionMatrix crossValidate(final Parameters parameters,
             final Iterable<LabelledVector> trainingSet, final int numPartitions,
             final int maxVectors) throws IOException {
+        return crossValidate(parameters, trainingSet, numPartitions, null, maxVectors);
+    }
+
+    public static ConfusionMatrix crossValidate(final Parameters parameters,
+            final Iterable<LabelledVector> trainingSet, final int numPartitions,
+            @Nullable Map<String, Integer> results, final int maxVectors) throws IOException {
 
         Preconditions.checkArgument(numPartitions >= 2);
         Preconditions.checkArgument(Iterables.size(trainingSet) > 0, "No training examples");
-        return crossValidate(parameters, Vector.split(trainingSet, numPartitions, maxVectors));
+        return crossValidate(parameters, Vector.split(trainingSet, numPartitions, maxVectors), results);
     }
 
     public static ConfusionMatrix crossValidate(final Parameters parameters,
             final Iterable<? extends Iterable<LabelledVector>> partitions) throws IOException {
+        return crossValidate(parameters, partitions, null);
+    }
+
+    public static ConfusionMatrix crossValidate(final Parameters parameters,
+            final Iterable<? extends Iterable<LabelledVector>> partitions, @Nullable Map<String, Integer> results) throws IOException {
 
         int size = 0;
         for (final Iterable<LabelledVector> partition : partitions) {
@@ -243,6 +264,7 @@ public abstract class Classifier {
                 public ConfusionMatrix call() throws IOException {
                     final Iterable<LabelledVector> testSet = partitionList.get(index);
                     final List<LabelledVector> trainingSet = Lists.newArrayList();
+
                     for (int j = 0; j < partitionList.size(); ++j) {
                         if (j != index) {
                             Iterables.addAll(trainingSet, partitionList.get(j));
@@ -250,6 +272,16 @@ public abstract class Classifier {
                     }
                     final Classifier classifier = train(parameters, trainingSet);
                     final List<LabelledVector> predictedSet = classifier.predict(false, testSet);
+                    if (results != null) {
+                        for (LabelledVector predictedVector : predictedSet) {
+                            String vectorID = predictedVector.getId();
+                            if (vectorID != null) {
+                                synchronized (results) {
+                                    results.put(vectorID, predictedVector.getLabel());
+                                }
+                            }
+                        }
+                    }
                     return LabelledVector.evaluate(testSet, predictedSet,
                             parameters.getNumLabels());
                 }
@@ -431,14 +463,14 @@ public abstract class Classifier {
             this.bias = algorithm.isLinear() ? bias != null ? bias : DEFAULT_BIAS : null;
             this.dual = algorithm == Algorithm.LINEAR_L2LOSS_L2REG
                     || algorithm == Algorithm.LINEAR_LRLOSS_L2REG
-                            ? dual != null ? dual : DEFAULT_DUAL : null;
+                    ? dual != null ? dual : DEFAULT_DUAL : null;
             this.gamma = algorithm == Algorithm.SVM_POLY_KERNEL
                     || algorithm == Algorithm.SVM_RBF_KERNEL
                     || algorithm == Algorithm.SVM_SIGMOID_KERNEL
-                            ? gamma != null ? gamma : DEFAULT_GAMMA : null;
+                    ? gamma != null ? gamma : DEFAULT_GAMMA : null;
             this.coeff = algorithm == Algorithm.SVM_POLY_KERNEL
                     || algorithm == Algorithm.SVM_SIGMOID_KERNEL
-                            ? coeff != null ? coeff : DEFAULT_COEFF : null;
+                    ? coeff != null ? coeff : DEFAULT_COEFF : null;
             this.degree = algorithm == Algorithm.SVM_POLY_KERNEL
                     ? degree != null ? degree : DEFAULT_DEGREE : null;
         }
