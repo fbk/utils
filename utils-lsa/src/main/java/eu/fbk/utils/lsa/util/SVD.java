@@ -47,7 +47,7 @@ public class SVD {
             String svdlibcCommand = svdlibcHome + "svd";
             logger.debug(svdlibcCommand);
             /*org.apache.commons.exec.CommandLine cmdLine = new org.apache.commons.exec.CommandLine(svdlibcCommand);
-			cmdLine.addArgument("-d " + dim);
+            cmdLine.addArgument("-d " + dim);
 			cmdLine.addArgument("-o " + rootFile);
 			cmdLine.addArgument(matrixFile);
 
