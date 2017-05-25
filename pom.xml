@@ -23,6 +23,7 @@
         <module>utils-mylibsvm</module>
         <module>utils-data</module>
         <module>utils-gson</module>
+        <module>utils-corenlp</module>
     </modules>
 
     <parent>
