@@ -1,5 +1,6 @@
 package eu.fbk.utils.corenlp;
 
+import com.google.common.collect.HashMultimap;
 import edu.stanford.nlp.ling.CoreAnnotation;
 import edu.stanford.nlp.util.ErasureUtils;
 import edu.stanford.nlp.util.Pair;
@@ -44,6 +45,17 @@ public class CustomAnnotations {
 
         public Class<List<Pair<Integer, String>>> getType() {
             return ErasureUtils.uncheckedCast(List.class);
+        }
+    }
+
+    @JSONLabel("simplecoref")
+    public static class SimpleCorefAnnotation implements CoreAnnotation<HashMultimap<Integer, Integer>> {
+
+        public SimpleCorefAnnotation() {
+        }
+
+        public Class<HashMultimap<Integer, Integer>> getType() {
+            return (Class) ErasureUtils.uncheckedCast(HashMultimap.class);
         }
     }
 
