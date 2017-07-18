@@ -24,6 +24,7 @@
         <module>utils-data</module>
         <module>utils-gson</module>
         <module>utils-corenlp</module>
+        <module>utils-wikipedia</module>
     </modules>
 
     <parent>
@@ -105,6 +106,7 @@
     <properties>
         <utils-version>${project.version}</utils-version>
         <rdfpro-version>0.5</rdfpro-version>
+        <twm-version>1.5-SNAPSHOT</twm-version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
