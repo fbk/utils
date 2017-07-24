@@ -27,7 +27,7 @@ public class SVD {
 
     public static final String DEFAULT_FILE_ROOT = System.getProperty("user.dir") + File.separator + "X";
 
-    public static final String SVDLIBC_HOME = System.getProperty("user.dir") + File.separator + "SVDLIBC";
+//    public static final String SVDLIBC_HOME = System.getProperty("user.dir") + File.separator + "SVDLIBC";
 
 //    Configuration config;
 
