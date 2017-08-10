@@ -192,6 +192,8 @@ public class JSONOutputter extends AnnotationOutputter {
         gsonBuilder.setExclusionStrategies(new AnnotationExclusionStrategy());
         Gson gson = gsonBuilder.create();
 
+        String text = doc.get(CoreAnnotations.TextAnnotation.class);
+
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("docId", doc.get(CoreAnnotations.DocIDAnnotation.class));
         jsonObject.addProperty("docDate", doc.get(CoreAnnotations.DocDateAnnotation.class));
@@ -200,7 +202,28 @@ public class JSONOutputter extends AnnotationOutputter {
         jsonObject.addProperty("author", doc.get(CoreAnnotations.AuthorAnnotation.class));
         jsonObject.addProperty("location", doc.get(CoreAnnotations.LocationAnnotation.class));
         if (options.includeText) {
-            jsonObject.addProperty("text", doc.get(CoreAnnotations.TextAnnotation.class));
+            jsonObject.addProperty("text", text);
+        }
+
+        List<CoreMap> quotes = doc.get(CoreAnnotations.QuotationsAnnotation.class);
+        if (quotes != null && quotes.size() > 0) {
+            JsonArray jsonQuotesArray = new JsonArray();
+            for (CoreMap quote : quotes) {
+                JsonObject quoteObj = new JsonObject();
+
+                List<CoreLabel> tokens = quote.get(CoreAnnotations.TokensAnnotation.class);
+                int begin = tokens.get(0).beginPosition();
+                int end = tokens.get(tokens.size() - 1).endPosition();
+
+                int beginContext = Math.max(0, begin - 100);
+                int endContext = Math.min(end + 100, text.length());
+                quoteObj.addProperty("text", quote.get(CoreAnnotations.TextAnnotation.class));
+                quoteObj.addProperty("context", text.substring(beginContext, endContext));
+                quoteObj.addProperty("characterOffsetBegin", begin);
+                quoteObj.addProperty("characterOffsetEnd", end);
+                jsonQuotesArray.add(quoteObj);
+            }
+            jsonObject.add("quotes", jsonQuotesArray);
         }
 
         add(gson, jsonObject, doc);
