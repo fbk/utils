@@ -70,15 +70,17 @@ public class JSONOutputter extends AnnotationOutputter {
 
     class CoreLabelSerializer implements JsonSerializer<CoreLabel> {
 
-        @Override public JsonElement serialize(CoreLabel coreLabel, Type type, JsonSerializationContext jsonSerializationContext) {
+        @Override
+        public JsonElement serialize(CoreLabel coreLabel, Type type, JsonSerializationContext jsonSerializationContext) {
             return new JsonPrimitive(coreLabel.index());
         }
     }
 
     class SpanSerializer implements JsonSerializer<Span> {
 
-        @Override public JsonElement serialize(Span span, Type type,
-                JsonSerializationContext jsonSerializationContext) {
+        @Override
+        public JsonElement serialize(Span span, Type type,
+                                     JsonSerializationContext jsonSerializationContext) {
             JsonArray jsonArray = new JsonArray();
             jsonArray.add(span.start());
             jsonArray.add(span.end());
@@ -88,8 +90,9 @@ public class JSONOutputter extends AnnotationOutputter {
 
     class SemanticGraphSerializer implements JsonSerializer<SemanticGraph> {
 
-        @Override public JsonElement serialize(SemanticGraph semanticGraph, Type type,
-                JsonSerializationContext jsonSerializationContext) {
+        @Override
+        public JsonElement serialize(SemanticGraph semanticGraph, Type type,
+                                     JsonSerializationContext jsonSerializationContext) {
             JsonArray jsonArray = new JsonArray();
 
             for (IndexedWord root : semanticGraph.getRoots()) {
@@ -116,8 +119,9 @@ public class JSONOutputter extends AnnotationOutputter {
 
     class RelationTripleSerializer implements JsonSerializer<RelationTriple> {
 
-        @Override public JsonElement serialize(RelationTriple triple, Type type,
-                JsonSerializationContext jsonSerializationContext) {
+        @Override
+        public JsonElement serialize(RelationTriple triple, Type type,
+                                     JsonSerializationContext jsonSerializationContext) {
             JsonObject ieObject = new JsonObject();
             ieObject.addProperty("subject", triple.subjectGloss());
             ieObject.add("subjectSpan", jsonSerializationContext.serialize(Span.fromPair(triple.subjectTokenSpan())));
@@ -131,8 +135,9 @@ public class JSONOutputter extends AnnotationOutputter {
 
     class TimexSerializer implements JsonSerializer<Timex> {
 
-        @Override public JsonElement serialize(Timex time, Type type,
-                JsonSerializationContext jsonSerializationContext) {
+        @Override
+        public JsonElement serialize(Timex time, Type type,
+                                     JsonSerializationContext jsonSerializationContext) {
             JsonObject timexObj = new JsonObject();
             timexObj.addProperty("tid", time.tid());
             timexObj.addProperty("type", time.timexType());
@@ -142,10 +147,26 @@ public class JSONOutputter extends AnnotationOutputter {
         }
     }
 
+    class DoubleSerializer implements JsonSerializer<Double> {
+
+        @Override
+        public JsonElement serialize(Double aDouble, Type type, JsonSerializationContext jsonSerializationContext) {
+            if (aDouble != null && aDouble.isNaN()) {
+                aDouble = null;
+            }
+            if (aDouble != null && aDouble.isInfinite()) {
+                aDouble = null;
+            }
+
+            return jsonSerializationContext.serialize(aDouble);
+        }
+    }
+
     class CorefChainSerializer implements JsonSerializer<CorefChain> {
 
-        @Override public JsonElement serialize(CorefChain chain, Type type,
-                JsonSerializationContext jsonSerializationContext) {
+        @Override
+        public JsonElement serialize(CorefChain chain, Type type,
+                                     JsonSerializationContext jsonSerializationContext) {
             CorefChain.CorefMention representative = chain.getRepresentativeMention();
             JsonArray chainArray = new JsonArray();
             for (CorefChain.CorefMention mention : chain.getMentionsInTextualOrder()) {
@@ -187,6 +208,7 @@ public class JSONOutputter extends AnnotationOutputter {
         gsonBuilder.registerTypeAdapter(Timex.class, new TimexSerializer());
         gsonBuilder.registerTypeAdapter(CorefChain.class, new CorefChainSerializer());
         gsonBuilder.registerTypeAdapter(CoreLabel.class, new CoreLabelSerializer());
+        gsonBuilder.registerTypeAdapter(Double.class, new DoubleSerializer());
 
         gsonBuilder.serializeSpecialFloatingPointValues();
         gsonBuilder.setExclusionStrategies(new AnnotationExclusionStrategy());
@@ -245,7 +267,7 @@ public class JSONOutputter extends AnnotationOutputter {
     }
 
     private static void addSentences(Gson gson, JsonObject jsonObject, List<CoreMap> sentences,
-            Options options) {
+                                     Options options) {
         JsonArray jsonSentenceArray = new JsonArray();
         for (CoreMap sentence : sentences) {
             JsonObject sentenceObj = new JsonObject();
@@ -346,7 +368,7 @@ public class JSONOutputter extends AnnotationOutputter {
     }
 
     public static void jsonPrint(GsonBuilder gsonBuilder, Annotation annotation, OutputStream os,
-            StanfordCoreNLP pipeline) throws IOException {
+                                 StanfordCoreNLP pipeline) throws IOException {
         new JSONOutputter(gsonBuilder).print(annotation, os, pipeline);
     }
 
@@ -356,8 +378,12 @@ public class JSONOutputter extends AnnotationOutputter {
     }
 
     public static String jsonPrint(Annotation annotation) throws IOException {
+        return jsonPrint(annotation, new Options());
+    }
+
+    public static String jsonPrint(Annotation annotation, Options options) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        new JSONOutputter().print(annotation, outputStream);
+        new JSONOutputter().print(annotation, outputStream, options);
         return new String(outputStream.toByteArray(), "UTF-8");
     }
 
@@ -366,7 +392,7 @@ public class JSONOutputter extends AnnotationOutputter {
     }
 
     public static void jsonPrint(Annotation annotation, OutputStream os,
-            StanfordCoreNLP pipeline) throws IOException {
+                                 StanfordCoreNLP pipeline) throws IOException {
         new JSONOutputter().print(annotation, os, pipeline);
     }
 
