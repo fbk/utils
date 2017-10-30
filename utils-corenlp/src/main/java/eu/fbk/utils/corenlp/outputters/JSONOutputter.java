@@ -158,7 +158,7 @@ public class JSONOutputter extends AnnotationOutputter {
                 aDouble = null;
             }
 
-            return jsonSerializationContext.serialize(aDouble);
+            return new JsonPrimitive(aDouble);
         }
     }
 
