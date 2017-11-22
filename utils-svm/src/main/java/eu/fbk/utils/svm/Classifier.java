@@ -10,11 +10,12 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import de.bwaldvogel.liblinear.*;
-import eu.fbk.rdfpro.util.Environment;
-import eu.fbk.rdfpro.util.Hash;
-import eu.fbk.rdfpro.util.IO;
-import eu.fbk.rdfpro.util.Statements;
+
+import eu.fbk.utils.core.Conversion;
 import eu.fbk.utils.core.Dictionary;
+import eu.fbk.utils.core.Environment;
+import eu.fbk.utils.core.Hash;
+import eu.fbk.utils.core.IO;
 import eu.fbk.utils.eval.ConfusionMatrix;
 import libsvm.*;
 import org.slf4j.Logger;
@@ -546,16 +547,16 @@ public abstract class Classifier {
                     .valueOf(p.getProperty(pr + "algorithm").toUpperCase());
             final int numLabels = Integer.parseInt(p.getProperty(pr + "numLabels"));
             final float c = Float.parseFloat(p.getProperty(pr + "c"));
-            final Float bias = Statements.convert(p.getProperty(pr + "bias"), Float.class);
-            final Boolean dual = Statements.convert(p.getProperty(pr + "dual"), Boolean.class);
-            final Float gamma = Statements.convert(p.getProperty(pr + "gamma"), Float.class);
-            final Float coeff = Statements.convert(p.getProperty(pr + "coeff"), Float.class);
-            final Integer degree = Statements.convert(p.getProperty(pr + "degree"), Integer.class);
+            final Float bias = Conversion.convert(p.getProperty(pr + "bias"), Float.class);
+            final Boolean dual = Conversion.convert(p.getProperty(pr + "dual"), Boolean.class);
+            final Float gamma = Conversion.convert(p.getProperty(pr + "gamma"), Float.class);
+            final Float coeff = Conversion.convert(p.getProperty(pr + "coeff"), Float.class);
+            final Integer degree = Conversion.convert(p.getProperty(pr + "degree"), Integer.class);
             float[] weights = null;
             if (p.containsKey(pr + "weight.0")) {
                 weights = new float[numLabels];
                 for (int i = 0; i < numLabels; ++i) {
-                    weights[i] = Statements.convert(p.getProperty(pr + "weight." + i),
+                    weights[i] = Conversion.convert(p.getProperty(pr + "weight." + i),
                             Float.class);
                 }
             }

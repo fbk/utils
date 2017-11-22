@@ -1,16 +1,12 @@
 package eu.fbk.utils.svm;
 
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
-import eu.fbk.rdfpro.util.Environment;
-import eu.fbk.rdfpro.util.IO;
-import eu.fbk.rdfpro.util.Namespaces;
-import eu.fbk.rdfpro.util.Statements;
-import org.openrdf.model.*;
-import org.openrdf.model.vocabulary.RDF;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import eu.fbk.utils.core.Environment;
+import eu.fbk.utils.core.IO;
 
 import javax.annotation.Nullable;
 import java.io.*;
@@ -29,11 +25,6 @@ import java.util.function.Function;
 public final class Util {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Util.class);
-
-    private static final Ordering<Value> DEFAULT_VALUE_ORDERING = new ValueOrdering(null);
-
-    private static final Ordering<Statement> DEFAULT_STATEMENT_ORDERING = new StatementOrdering(
-            "spoc", new ValueOrdering(ImmutableList.of(RDF.NAMESPACE)));
 
     public static final Properties PROPERTIES;
 
@@ -262,22 +253,6 @@ public final class Util {
         return result;
     }
 
-    public static Ordering<Value> valueOrdering(final String... rankedNamespaces) {
-        return rankedNamespaces == null || rankedNamespaces.length == 0 ? DEFAULT_VALUE_ORDERING
-                : new ValueOrdering(Arrays.asList(rankedNamespaces));
-    }
-
-    public static Ordering<Statement> statementOrdering(@Nullable final String components,
-            @Nullable final Comparator<? super Value> valueComparator) {
-        if (components == null) {
-            return valueComparator == null ? DEFAULT_STATEMENT_ORDERING //
-                    : new StatementOrdering("spoc", valueComparator);
-        } else {
-            return new StatementOrdering(components,
-                    valueComparator == null ? DEFAULT_VALUE_ORDERING : valueComparator);
-        }
-    }
-
     @SuppressWarnings("unchecked")
     public static <T> T[] newArray(final Class<T> clazz, final Object... elements) {
         final T[] array = newArray(clazz, elements.length);
@@ -488,108 +463,6 @@ public final class Util {
             } else {
                 throw new IllegalArgumentException("Could not compare similarities "
                         + this.similarity + ", " + other.similarity);
-            }
-        }
-
-    }
-
-    private static final class ValueOrdering extends Ordering<Value> {
-
-        private final List<String> rankedNamespaces;
-
-        public ValueOrdering(@Nullable final Iterable<? extends String> rankedNamespaces) {
-            this.rankedNamespaces = rankedNamespaces == null ? ImmutableList.of() : ImmutableList
-                    .copyOf(rankedNamespaces);
-        }
-
-        @Override
-        public int compare(final Value v1, final Value v2) {
-            if (v1 instanceof URI) {
-                if (v2 instanceof URI) {
-                    final int rank1 = this.rankedNamespaces.indexOf(((URI) v1).getNamespace());
-                    final int rank2 = this.rankedNamespaces.indexOf(((URI) v2).getNamespace());
-                    if (rank1 >= 0 && (rank1 < rank2 || rank2 < 0)) {
-                        return -1;
-                    } else if (rank2 >= 0 && (rank2 < rank1 || rank1 < 0)) {
-                        return 1;
-                    }
-                    final String string1 = Statements.formatValue(v1, Namespaces.DEFAULT);
-                    final String string2 = Statements.formatValue(v2, Namespaces.DEFAULT);
-                    return string1.compareTo(string2);
-                } else {
-                    return -1;
-                }
-            } else if (v1 instanceof BNode) {
-                if (v2 instanceof BNode) {
-                    return ((BNode) v1).getID().compareTo(((BNode) v2).getID());
-                } else if (v2 instanceof URI) {
-                    return 1;
-                } else {
-                    return -1;
-                }
-            } else if (v1 instanceof Literal) {
-                if (v2 instanceof Literal) {
-                    return ((Literal) v1).getLabel().compareTo(((Literal) v2).getLabel());
-                } else if (v2 instanceof Resource) {
-                    return 1;
-                } else {
-                    return -1;
-                }
-            } else {
-                if (v1 == v2) {
-                    return 0;
-                } else {
-                    return 1;
-                }
-            }
-        }
-
-    }
-
-    private static final class StatementOrdering extends Ordering<Statement> {
-
-        private final String components;
-
-        private final Comparator<? super Value> valueComparator;
-
-        public StatementOrdering(final String components,
-                final Comparator<? super Value> valueComparator) {
-            this.components = components.trim().toLowerCase();
-            this.valueComparator = Preconditions.checkNotNull(valueComparator);
-            for (int i = 0; i < this.components.length(); ++i) {
-                final char c = this.components.charAt(i);
-                if (c != 's' && c != 'p' && c != 'o' && c != 'c') {
-                    throw new IllegalArgumentException("Invalid components: " + components);
-                }
-            }
-        }
-
-        @Override
-        public int compare(final Statement s1, final Statement s2) {
-            for (int i = 0; i < this.components.length(); ++i) {
-                final char c = this.components.charAt(i);
-                final Value v1 = getValue(s1, c);
-                final Value v2 = getValue(s2, c);
-                final int result = this.valueComparator.compare(v1, v2);
-                if (result != 0) {
-                    return result;
-                }
-            }
-            return 0;
-        }
-
-        private Value getValue(final Statement statement, final char component) {
-            switch (component) {
-            case 's':
-                return statement.getSubject();
-            case 'p':
-                return statement.getPredicate();
-            case 'o':
-                return statement.getObject();
-            case 'c':
-                return statement.getContext();
-            default:
-                throw new Error();
             }
         }
 

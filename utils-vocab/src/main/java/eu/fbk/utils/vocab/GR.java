@@ -1,9 +1,9 @@
 package eu.fbk.utils.vocab;
 
-import org.openrdf.model.Namespace;
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.NamespaceImpl;
-import org.openrdf.model.impl.ValueFactoryImpl;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Namespace;
+import org.eclipse.rdf4j.model.impl.SimpleNamespace;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 public final class GR {
 
@@ -11,20 +11,20 @@ public final class GR {
 
     public static final String NAMESPACE = "http://purl.org/goodrelations/v1#";
 
-    public static final Namespace NS = new NamespaceImpl(PREFIX, NAMESPACE);
+    public static final Namespace NS = new SimpleNamespace(PREFIX, NAMESPACE);
 
     // TERMS
 
-    public static final URI PRICE_SPECIFICATION = createURI("PriceSpecification");
+    public static final IRI PRICE_SPECIFICATION = createIRI("PriceSpecification");
 
-    public static final URI HAS_CURRENCY = createURI("hasCurrency");
+    public static final IRI HAS_CURRENCY = createIRI("hasCurrency");
 
-    public static final URI HAS_CURRENCY_VALUE = createURI("hasCurrencyValue");
+    public static final IRI HAS_CURRENCY_VALUE = createIRI("hasCurrencyValue");
 
     // HELPER METHODS
 
-    private static URI createURI(final String localName) {
-        return ValueFactoryImpl.getInstance().createURI(NAMESPACE, localName);
+    private static IRI createIRI(final String localName) {
+        return SimpleValueFactory.getInstance().createIRI(NAMESPACE, localName);
     }
 
     private GR() {
