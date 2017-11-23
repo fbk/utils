@@ -59,4 +59,12 @@ public class CustomAnnotations {
         }
     }
 
+    @JSONLabel("language")
+    public static class LanguageAnnotation implements CoreAnnotation<String> {
+
+        public Class<String> getType() {
+            return ErasureUtils.uncheckedCast(String.class);
+        }
+    }
+
 }
