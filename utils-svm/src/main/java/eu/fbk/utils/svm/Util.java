@@ -2,11 +2,10 @@ package eu.fbk.utils.svm;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import eu.fbk.utils.core.Environment;
 import eu.fbk.utils.core.IO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.io.*;

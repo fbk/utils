@@ -10,12 +10,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import de.bwaldvogel.liblinear.*;
-
-import eu.fbk.utils.core.Conversion;
+import eu.fbk.utils.core.*;
 import eu.fbk.utils.core.Dictionary;
-import eu.fbk.utils.core.Environment;
-import eu.fbk.utils.core.Hash;
-import eu.fbk.utils.core.IO;
 import eu.fbk.utils.eval.ConfusionMatrix;
 import libsvm.*;
 import org.slf4j.Logger;
