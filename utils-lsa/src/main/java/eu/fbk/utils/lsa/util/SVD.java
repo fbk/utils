@@ -1,8 +1,6 @@
 package eu.fbk.utils.lsa.util;
 
 import org.apache.commons.cli.*;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -29,25 +27,25 @@ public class SVD {
 
     public static final String DEFAULT_FILE_ROOT = System.getProperty("user.dir") + File.separator + "X";
 
-    public static final String SVDLIBC_HOME = System.getProperty("user.dir") + File.separator + "SVDLIBC";
+//    public static final String SVDLIBC_HOME = System.getProperty("user.dir") + File.separator + "SVDLIBC";
 
-    Configuration config;
+//    Configuration config;
 
-    public SVD(String matrixFile, String rootFile, int dim) {
+    public SVD(String matrixFile, String rootFile, int dim, String svdlibcCommand) {
         try {
-            String name = "configuration/config.xml";
-            logger.info("configuration file " + name);
-            DefaultConfigurationBuilder defaultConfigurationBuilder = new DefaultConfigurationBuilder(name);
-            defaultConfigurationBuilder.setBasePath(".");
-            config = defaultConfigurationBuilder.getConfiguration();
-            String svdlibcHome = config.getString("SVDLIBC_HOME");
-            if (!svdlibcHome.endsWith(File.separator)) {
-                svdlibcHome += File.separator;
-            }
-            String svdlibcCommand = svdlibcHome + "svd";
-            logger.debug(svdlibcCommand);
+//            String name = "configuration/config.xml";
+//            logger.info("configuration file " + name);
+//            DefaultConfigurationBuilder defaultConfigurationBuilder = new DefaultConfigurationBuilder(name);
+//            defaultConfigurationBuilder.setBasePath(".");
+//            config = defaultConfigurationBuilder.getConfiguration();
+//            String svdlibcHome = config.getString("SVDLIBC_HOME");
+//            if (!svdlibcHome.endsWith(File.separator)) {
+//                svdlibcHome += File.separator;
+//            }
+//            String svdlibcCommand = svdlibcHome + "svd";
+//            logger.debug(svdlibcCommand);
             /*org.apache.commons.exec.CommandLine cmdLine = new org.apache.commons.exec.CommandLine(svdlibcCommand);
-			cmdLine.addArgument("-d " + dim);
+            cmdLine.addArgument("-d " + dim);
 			cmdLine.addArgument("-o " + rootFile);
 			cmdLine.addArgument(matrixFile);
 
@@ -108,6 +106,9 @@ public class SVD {
             Option dimOpt = OptionBuilder.withArgName("int").hasArg()
                     .withDescription("Desired SVD triples (default is " + DEFAULT_DIM + ")").withLongOpt("dimension")
                     .create("d");
+            Option svdOpt = OptionBuilder.withArgName("command").hasArg()
+                    .withDescription("SVD command").withLongOpt("svd").isRequired()
+                    .create("s");
 
             options.addOption("h", "help", false, "print this message");
             options.addOption("v", "version", false, "output version information and exit");
@@ -115,9 +116,12 @@ public class SVD {
             options.addOption(matrixFileOpt);
             options.addOption(rootFileOpt);
             options.addOption(dimOpt);
+            options.addOption(svdOpt);
 
             CommandLineParser parser = new PosixParser();
             CommandLine line = parser.parse(options, args);
+
+            String svdCommand = line.getOptionValue("svd");
 
             String rootFile = DEFAULT_FILE_ROOT;
             if (line.hasOption("root-file")) {
@@ -127,7 +131,7 @@ public class SVD {
             if (line.hasOption("dim")) {
                 dim = Integer.parseInt(line.getOptionValue("dim"));
             }
-            new SVD(line.getOptionValue("matrix-file"), rootFile, dim);
+            new SVD(line.getOptionValue("matrix-file"), rootFile, dim, svdCommand);
         } catch (ParseException e) {
             // oops, something went wrong
             System.out.println("Parsing failed: " + e.getMessage() + "\n");

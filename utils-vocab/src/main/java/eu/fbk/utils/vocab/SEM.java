@@ -1,9 +1,9 @@
 package eu.fbk.utils.vocab;
 
-import org.openrdf.model.Namespace;
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.NamespaceImpl;
-import org.openrdf.model.impl.ValueFactoryImpl;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Namespace;
+import org.eclipse.rdf4j.model.impl.SimpleNamespace;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 /**
  * Constants for the Simple Event Model (SEM) Ontology.
@@ -19,133 +19,133 @@ public final class SEM {
     public static final String NAMESPACE = "http://semanticweb.cs.vu.nl/2009/11/sem/";
 
     /** Immutable {@link Namespace} constant for the vocabulary namespace. */
-    public static final Namespace NS = new NamespaceImpl(PREFIX, NAMESPACE);
+    public static final Namespace NS = new SimpleNamespace(PREFIX, NAMESPACE);
 
     // CLASSES
 
     /** Class sem:Actor. */
-    public static final URI ACTOR = createURI("Actor");
+    public static final IRI ACTOR = createIRI("Actor");
 
     /** Class sem:ActorType. */
-    public static final URI ACTOR_TYPE = createURI("ActorType");
+    public static final IRI ACTOR_TYPE = createIRI("ActorType");
 
     /** Class sem:Authority. */
-    public static final URI AUTHORITY = createURI("Authority");
+    public static final IRI AUTHORITY = createIRI("Authority");
 
     /** Class sem:Constraint. */
-    public static final URI CONSTRAINT = createURI("Constraint");
+    public static final IRI CONSTRAINT = createIRI("Constraint");
 
     /** Class sem:Core. */
-    public static final URI CORE = createURI("Core");
+    public static final IRI CORE = createIRI("Core");
 
     /** Class sem:Event. */
-    public static final URI EVENT = createURI("Event");
+    public static final IRI EVENT = createIRI("Event");
 
     /** Class sem:EventType. */
-    public static final URI EVENT_TYPE = createURI("EventType");
+    public static final IRI EVENT_TYPE = createIRI("EventType");
 
     /** Class sem:Object. */
-    public static final URI OBJECT = createURI("Object");
+    public static final IRI OBJECT = createIRI("Object");
 
     /** Class sem:Place. */
-    public static final URI PLACE = createURI("Place");
+    public static final IRI PLACE = createIRI("Place");
 
     /** Class sem:PlaceType. */
-    public static final URI PLACE_TYPE = createURI("PlaceType");
+    public static final IRI PLACE_TYPE = createIRI("PlaceType");
 
     /** Class sem:Role. */
-    public static final URI ROLE = createURI("Role");
+    public static final IRI ROLE = createIRI("Role");
 
     /** Class sem:RoleType. */
-    public static final URI ROLE_TYPE = createURI("RoleType");
+    public static final IRI ROLE_TYPE = createIRI("RoleType");
 
     /** Class sem:Temporary. */
-    public static final URI TEMPORARY = createURI("Temporary");
+    public static final IRI TEMPORARY = createIRI("Temporary");
 
     /** Class sem:Time. */
-    public static final URI TIME = createURI("Time");
+    public static final IRI TIME = createIRI("Time");
 
     /** Class sem:TimeType. */
-    public static final URI TIME_TYPE = createURI("TimeType");
+    public static final IRI TIME_TYPE = createIRI("TimeType");
 
     /** Class sem:Type. */
-    public static final URI TYPE = createURI("Type");
+    public static final IRI TYPE = createIRI("Type");
 
     /** Class sem:View. */
-    public static final URI VIEW = createURI("View");
+    public static final IRI VIEW = createIRI("View");
 
     // PROPERTIES
 
     /** Property sem:accordingTo. */
-    public static final URI ACCORDING_TO = createURI("accordingTo");
+    public static final IRI ACCORDING_TO = createIRI("accordingTo");
 
     /** Property sem:actorType. */
-    public static final URI ACTOR_TYPE_PROPERTY = createURI("actorType");
+    public static final IRI ACTOR_TYPE_PROPERTY = createIRI("actorType");
 
     /** Property sem:eventProperty. */
-    public static final URI EVENT_PROPERTY = createURI("eventProperty");
+    public static final IRI EVENT_PROPERTY = createIRI("eventProperty");
 
     /** Property sem:eventType. */
-    public static final URI EVENT_TYPE_PROPERTY = createURI("eventType");
+    public static final IRI EVENT_TYPE_PROPERTY = createIRI("eventType");
 
     /** Property sem:hasActor. */
-    public static final URI HAS_ACTOR = createURI("hasActor");
+    public static final IRI HAS_ACTOR = createIRI("hasActor");
 
     /** Property sem:hasBeginTimeStamp. */
-    public static final URI HAS_BEGIN_TIME_STAMP = createURI("hasBeginTimeStamp");
+    public static final IRI HAS_BEGIN_TIME_STAMP = createIRI("hasBeginTimeStamp");
 
     /** Property sem:hasEarliestBeginTimeStamp. */
-    public static final URI HAS_EARLIEST_BEGIN_TIME_STAMP = createURI("hasEarliestBeginTimeStamp");
+    public static final IRI HAS_EARLIEST_BEGIN_TIME_STAMP = createIRI("hasEarliestBeginTimeStamp");
 
     /** Property sem:hasEarliestEndTimeStamp. */
-    public static final URI HAS_EARLIEST_END_TIME_STAMP = createURI("hasEarliestEndTimeStamp");
+    public static final IRI HAS_EARLIEST_END_TIME_STAMP = createIRI("hasEarliestEndTimeStamp");
 
     /** Property sem:hasEndTimeStamp. */
-    public static final URI HAS_END_TIME_STAMP = createURI("hasEndTimeStamp");
+    public static final IRI HAS_END_TIME_STAMP = createIRI("hasEndTimeStamp");
 
     /** Property sem:hasLatestBeginTimeStamp. */
-    public static final URI HAS_LATEST_BEGIN_TIME_STAMP = createURI("hasLatestBeginTimeStamp");
+    public static final IRI HAS_LATEST_BEGIN_TIME_STAMP = createIRI("hasLatestBeginTimeStamp");
 
     /** Property sem:hasLatestEndTimeStamp. */
-    public static final URI HAS_LATEST_END_TIME_STAMP = createURI("hasLatestEndTimeStamp");
+    public static final IRI HAS_LATEST_END_TIME_STAMP = createIRI("hasLatestEndTimeStamp");
 
     /** Property sem:hasPlace. */
-    public static final URI HAS_PLACE = createURI("hasPlace");
+    public static final IRI HAS_PLACE = createIRI("hasPlace");
 
     /** Property sem:hasSubEvent. */
-    public static final URI HAS_SUB_EVENT = createURI("hasSubEvent");
+    public static final IRI HAS_SUB_EVENT = createIRI("hasSubEvent");
 
     /** Property sem:hasSubType. */
-    public static final URI HAS_SUB_TYPE = createURI("hasSubType");
+    public static final IRI HAS_SUB_TYPE = createIRI("hasSubType");
 
     /** Property sem:hasTime. */
-    public static final URI HAS_TIME = createURI("hasTime");
+    public static final IRI HAS_TIME = createIRI("hasTime");
 
     /** Property sem:hasTimeStamp. */
-    public static final URI HAS_TIME_STAMP = createURI("hasTimeStamp");
+    public static final IRI HAS_TIME_STAMP = createIRI("hasTimeStamp");
 
     /** Property sem:placeType. */
-    public static final URI PLACE_TYPE_PROPERTY = createURI("placeType");
+    public static final IRI PLACE_TYPE_PROPERTY = createIRI("placeType");
 
     /** Property sem:roleType. */
-    public static final URI ROLE_TYPE_PROPERTY = createURI("roleType");
+    public static final IRI ROLE_TYPE_PROPERTY = createIRI("roleType");
 
     /** Property sem:subEventOf. */
-    public static final URI SUB_EVENT_OF = createURI("subEventOf");
+    public static final IRI SUB_EVENT_OF = createIRI("subEventOf");
 
     /** Property sem:subTypeOf. */
-    public static final URI SUB_TYPE_OF = createURI("subTypeOf");
+    public static final IRI SUB_TYPE_OF = createIRI("subTypeOf");
 
     /** Property sem:timeType. */
-    public static final URI TIME_TYPE_PROPERTY = createURI("timeType");
+    public static final IRI TIME_TYPE_PROPERTY = createIRI("timeType");
 
     /** Property sem:type. */
-    public static final URI TYPE_PROPERTY = createURI("type");
+    public static final IRI TYPE_PROPERTY = createIRI("type");
 
     // HELPER METHODS
 
-    private static URI createURI(final String localName) {
-        return ValueFactoryImpl.getInstance().createURI(NAMESPACE, localName);
+    private static IRI createIRI(final String localName) {
+        return SimpleValueFactory.getInstance().createIRI(NAMESPACE, localName);
     }
 
     private SEM() {

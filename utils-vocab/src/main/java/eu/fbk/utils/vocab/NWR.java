@@ -1,9 +1,9 @@
 package eu.fbk.utils.vocab;
 
-import org.openrdf.model.Namespace;
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.NamespaceImpl;
-import org.openrdf.model.impl.ValueFactoryImpl;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Namespace;
+import org.eclipse.rdf4j.model.impl.SimpleNamespace;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 public final class NWR {
 
@@ -11,20 +11,20 @@ public final class NWR {
 
     public static final String NAMESPACE = "http://www.newsreader-project.eu/ontologies/";
 
-    public static final Namespace NS = new NamespaceImpl(PREFIX, NAMESPACE);
+    public static final Namespace NS = new SimpleNamespace(PREFIX, NAMESPACE);
 
-    public static final URI PERSON = createURI("PERSON");
+    public static final IRI PERSON = createIRI("PERSON");
 
-    public static final URI ORGANIZATION = createURI("ORGANIZATION");
+    public static final IRI ORGANIZATION = createIRI("ORGANIZATION");
 
-    public static final URI LOCATION = createURI("LOCATION");
+    public static final IRI LOCATION = createIRI("LOCATION");
 
-    public static final URI MISC = createURI("MISC");
+    public static final IRI MISC = createIRI("MISC");
 
     // HELPER METHODS
 
-    private static URI createURI(final String localName) {
-        return ValueFactoryImpl.getInstance().createURI(NAMESPACE, localName);
+    private static IRI createIRI(final String localName) {
+        return SimpleValueFactory.getInstance().createIRI(NAMESPACE, localName);
     }
 
     private NWR() {

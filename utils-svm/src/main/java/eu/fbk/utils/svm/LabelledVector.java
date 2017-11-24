@@ -10,7 +10,7 @@ import java.util.Iterator;
 
 public abstract class LabelledVector extends Vector {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private final Vector vector;
 
@@ -28,6 +28,7 @@ public abstract class LabelledVector extends Vector {
     }
 
     private LabelledVector(final Vector vector, final int label) {
+        super(vector.getId());
         this.vector = vector;
         this.label = label;
     }

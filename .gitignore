@@ -5,6 +5,9 @@ target
 .classpath
 .project
 .settings/
+.DS_Store
 
 pom.xml.versionsBackup
 workspace
+log-config.txt
+configuration

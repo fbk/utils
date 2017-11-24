@@ -1,9 +1,9 @@
 package eu.fbk.utils.vocab;
 
-import org.openrdf.model.Namespace;
-import org.openrdf.model.URI;
-import org.openrdf.model.impl.NamespaceImpl;
-import org.openrdf.model.impl.ValueFactoryImpl;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.Namespace;
+import org.eclipse.rdf4j.model.impl.SimpleNamespace;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 public class OWLTIME {
 
@@ -11,146 +11,146 @@ public class OWLTIME {
 
     public static final String NAMESPACE = "http://www.w3.org/TR/owl-time#";
 
-    public static final Namespace NS = new NamespaceImpl(PREFIX, NAMESPACE);
+    public static final Namespace NS = new SimpleNamespace(PREFIX, NAMESPACE);
 
     // CLASSES
 
-    public static final URI DATE_TIME_DESCRIPTION = createURI("DateTimeDescription");
+    public static final IRI DATE_TIME_DESCRIPTION = createIRI("DateTimeDescription");
 
-    public static final URI DATE_TIME_INTERVAL = createURI("DateTimeInterval");
+    public static final IRI DATE_TIME_INTERVAL = createIRI("DateTimeInterval");
 
-    public static final URI DAY_OF_WEEK_CLASS = createURI("DayOfWeek");
+    public static final IRI DAY_OF_WEEK_CLASS = createIRI("DayOfWeek");
 
-    public static final URI DURATION_DESCRIPTION = createURI("DurationDescription");
+    public static final IRI DURATION_DESCRIPTION = createIRI("DurationDescription");
 
-    public static final URI INSTANT = createURI("Instant");
+    public static final IRI INSTANT = createIRI("Instant");
 
-    public static final URI INTERVAL = createURI("Interval");
+    public static final IRI INTERVAL = createIRI("Interval");
 
-    public static final URI PROPER_INTERVAL = createURI("ProperInterval");
+    public static final IRI PROPER_INTERVAL = createIRI("ProperInterval");
 
-    public static final URI TEMPORAL_ENTITY = createURI("TemporalEntity");
+    public static final IRI TEMPORAL_ENTITY = createIRI("TemporalEntity");
 
-    public static final URI TEMPORAL_UNIT = createURI("TemporalUnit");
+    public static final IRI TEMPORAL_UNIT = createIRI("TemporalUnit");
 
     // PROPERTIES
 
-    public static final URI AFTER = createURI("after");
+    public static final IRI AFTER = createIRI("after");
 
-    public static final URI BEFORE = createURI("before");
+    public static final IRI BEFORE = createIRI("before");
 
-    public static final URI DAY = createURI("day");
+    public static final IRI DAY = createIRI("day");
 
-    public static final URI DAY_OF_WEEK = createURI("dayOfWeek");
+    public static final IRI DAY_OF_WEEK = createIRI("dayOfWeek");
 
-    public static final URI DAY_OF_YEAR = createURI("dayOfYear");
+    public static final IRI DAY_OF_YEAR = createIRI("dayOfYear");
 
-    public static final URI DAYS = createURI("days");
+    public static final IRI DAYS = createIRI("days");
 
-    public static final URI HAS_BEGINNING = createURI("hasBeginning");
+    public static final IRI HAS_BEGINNING = createIRI("hasBeginning");
 
-    public static final URI HAS_DATE_TIME_DESCRIPTION = createURI("hasDateTimeDescription");
+    public static final IRI HAS_DATE_TIME_DESCRIPTION = createIRI("hasDateTimeDescription");
 
-    public static final URI HAS_DURATION_DESCRIPTION = createURI("hasDurationDescription");
+    public static final IRI HAS_DURATION_DESCRIPTION = createIRI("hasDurationDescription");
 
-    public static final URI HAS_END = createURI("hasEnd");
+    public static final IRI HAS_END = createIRI("hasEnd");
 
-    public static final URI HOUR = createURI("hour");
+    public static final IRI HOUR = createIRI("hour");
 
-    public static final URI HOURS = createURI("hours");
+    public static final IRI HOURS = createIRI("hours");
 
-    public static final URI IN_DATE_TIME = createURI("inDateTime");
+    public static final IRI IN_DATE_TIME = createIRI("inDateTime");
 
-    public static final URI INSIDE = createURI("inside");
+    public static final IRI INSIDE = createIRI("inside");
 
-    public static final URI INTERVAL_AFTER = createURI("intervalAfter");
+    public static final IRI INTERVAL_AFTER = createIRI("intervalAfter");
 
-    public static final URI INTERVAL_BEFORE = createURI("intervalBefore");
+    public static final IRI INTERVAL_BEFORE = createIRI("intervalBefore");
 
-    public static final URI INTERVAL_CONTAINS = createURI("intervalContains");
+    public static final IRI INTERVAL_CONTAINS = createIRI("intervalContains");
 
-    public static final URI INTERVAL_DURING = createURI("intervalDuring");
+    public static final IRI INTERVAL_DURING = createIRI("intervalDuring");
 
-    public static final URI INTERVAL_EQUALS = createURI("intervalEquals");
+    public static final IRI INTERVAL_EQUALS = createIRI("intervalEquals");
 
-    public static final URI INTERVAL_FINISHED_BY = createURI("intervalFinishedBy");
+    public static final IRI INTERVAL_FINISHED_BY = createIRI("intervalFinishedBy");
 
-    public static final URI INTERVAL_FINISHES = createURI("intervalFinishes");
+    public static final IRI INTERVAL_FINISHES = createIRI("intervalFinishes");
 
-    public static final URI INTERVAL_MEETS = createURI("intervalMeets");
+    public static final IRI INTERVAL_MEETS = createIRI("intervalMeets");
 
-    public static final URI INTERVAL_MET_BY = createURI("intervalMetBy");
+    public static final IRI INTERVAL_MET_BY = createIRI("intervalMetBy");
 
-    public static final URI INTERVAL_OVERLAPPED_BY = createURI("intervalOverlappedBy");
+    public static final IRI INTERVAL_OVERLAPPED_BY = createIRI("intervalOverlappedBy");
 
-    public static final URI INTERVAL_OVERLAPS = createURI("intervalOverlaps");
+    public static final IRI INTERVAL_OVERLAPS = createIRI("intervalOverlaps");
 
-    public static final URI INTERVAL_STARTED_BY = createURI("intervalStartedBy");
+    public static final IRI INTERVAL_STARTED_BY = createIRI("intervalStartedBy");
 
-    public static final URI INTERVAL_STARTS = createURI("intervalStarts");
+    public static final IRI INTERVAL_STARTS = createIRI("intervalStarts");
 
-    public static final URI IN_XSD_DATE_TIME = createURI("inXSDDateTime");
+    public static final IRI IN_XSD_DATE_TIME = createIRI("inXSDDateTime");
 
-    public static final URI MINUTE = createURI("minute");
+    public static final IRI MINUTE = createIRI("minute");
 
-    public static final URI MINUTES = createURI("minutes");
+    public static final IRI MINUTES = createIRI("minutes");
 
-    public static final URI MONTH = createURI("month");
+    public static final IRI MONTH = createIRI("month");
 
-    public static final URI MONTHS = createURI("months");
+    public static final IRI MONTHS = createIRI("months");
 
-    public static final URI SECOND = createURI("second");
+    public static final IRI SECOND = createIRI("second");
 
-    public static final URI SECONDS = createURI("seconds");
+    public static final IRI SECONDS = createIRI("seconds");
 
-    public static final URI TIME_ZONE = createURI("timeZone");
+    public static final IRI TIME_ZONE = createIRI("timeZone");
 
-    public static final URI UNIT_TYPE = createURI("unitType");
+    public static final IRI UNIT_TYPE = createIRI("unitType");
 
-    public static final URI WEEK = createURI("week");
+    public static final IRI WEEK = createIRI("week");
 
-    public static final URI WEEKS = createURI("weeks");
+    public static final IRI WEEKS = createIRI("weeks");
 
-    public static final URI XSD_DATE_TIME = createURI("xsdDateTime");
+    public static final IRI XSD_DATE_TIME = createIRI("xsdDateTime");
 
-    public static final URI YEAR = createURI("year");
+    public static final IRI YEAR = createIRI("year");
 
-    public static final URI YEARS = createURI("years");
+    public static final IRI YEARS = createIRI("years");
 
     // INDIVIDUALS
 
-    public static final URI UNIT_SECOND = createURI("unitSecond");
+    public static final IRI UNIT_SECOND = createIRI("unitSecond");
 
-    public static final URI UNIT_MINUTE = createURI("unitMinute");
+    public static final IRI UNIT_MINUTE = createIRI("unitMinute");
 
-    public static final URI UNIT_HOUR = createURI("unitHour");
+    public static final IRI UNIT_HOUR = createIRI("unitHour");
 
-    public static final URI UNIT_DAY = createURI("unitDay");
+    public static final IRI UNIT_DAY = createIRI("unitDay");
 
-    public static final URI UNIT_WEEK = createURI("unitWeek");
+    public static final IRI UNIT_WEEK = createIRI("unitWeek");
 
-    public static final URI UNIT_MONTH = createURI("unitMonth");
+    public static final IRI UNIT_MONTH = createIRI("unitMonth");
 
-    public static final URI UNIT_YEAR = createURI("unitYear");
+    public static final IRI UNIT_YEAR = createIRI("unitYear");
 
-    public static final URI MONDAY = createURI("Monday");
+    public static final IRI MONDAY = createIRI("Monday");
 
-    public static final URI TUESDAY = createURI("Tuesday");
+    public static final IRI TUESDAY = createIRI("Tuesday");
 
-    public static final URI WEDNESDAY = createURI("Wednesday");
+    public static final IRI WEDNESDAY = createIRI("Wednesday");
 
-    public static final URI THURSDAY = createURI("Thursday");
+    public static final IRI THURSDAY = createIRI("Thursday");
 
-    public static final URI FRIDAY = createURI("Friday");
+    public static final IRI FRIDAY = createIRI("Friday");
 
-    public static final URI SATURDAY = createURI("Saturday");
+    public static final IRI SATURDAY = createIRI("Saturday");
 
-    public static final URI SUNDAY = createURI("Sunday");
+    public static final IRI SUNDAY = createIRI("Sunday");
 
     // HELPER METHODS
 
-    private static URI createURI(final String localName) {
-        return ValueFactoryImpl.getInstance().createURI(NAMESPACE, localName);
+    private static IRI createIRI(final String localName) {
+        return SimpleValueFactory.getInstance().createIRI(NAMESPACE, localName);
     }
 
     private OWLTIME() {

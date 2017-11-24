@@ -8,13 +8,14 @@ import eu.fbk.utils.lsa.io.FileFreqFilter;
 import eu.fbk.utils.lsa.io.TFIDF;
 import eu.fbk.utils.lsa.io.TermDocumentMatrixFileWriter;
 import org.apache.commons.cli.*;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.tartarus.snowball.SnowballStemmer;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.util.Properties;
 
 /**
  * Created with IntelliJ IDEA.
@@ -31,7 +32,7 @@ public class CreateLsa {
      */
     static Logger logger = Logger.getLogger(CreateLsa.class.getName());
 
-    Configuration config;
+//    Configuration config;
 
     public static final int DEFAULT_CUTOFF = 5;
 
@@ -42,13 +43,25 @@ public class CreateLsa {
     SnowballStemmer snowballStemmer = null;
 
     public CreateLsa(File corpusFile, String modelDir, int dim, int cutoff, int numDoc, File stopWordFile,
-            Stemmer stemmer) {
+            Stemmer stemmer, String svdCommand) {
         try {
-            String name = "configuration/config.xml";
-            logger.info("configuration file " + name);
-            DefaultConfigurationBuilder defaultConfigurationBuilder = new DefaultConfigurationBuilder(name);
-            defaultConfigurationBuilder.setBasePath(".");
-            config = defaultConfigurationBuilder.getConfiguration();
+//            if (configurationFolder == null) {
+//                configurationFolder = System.getenv("TWM_CONFIGFOLDER");
+//                if (configurationFolder.length() == 0) {
+//                    configurationFolder = null;
+//                }
+//            }
+//            if (configurationFolder == null) {
+//                configurationFolder = "configuration";
+//            }
+//            if (!configurationFolder.endsWith(File.separator)) {
+//                configurationFolder += File.separator;
+//            }
+//            String name = configurationFolder + "config.xml";
+//            logger.info("configuration file " + name);
+//            DefaultConfigurationBuilder defaultConfigurationBuilder = new DefaultConfigurationBuilder(name);
+//            defaultConfigurationBuilder.setBasePath(".");
+//            config = defaultConfigurationBuilder.getConfiguration();
 
             String outputDirName = modelDir + "lsa-cutoff-" + cutoff + "-dim-" + dim;
             if (numDoc == Integer.MAX_VALUE) {
@@ -93,7 +106,7 @@ public class CreateLsa {
 
             logger.info(
                     "running svd (" + tfIdfMatrixFile.getAbsolutePath() + ", " + outputDirName + "X, " + dim + ")...");
-            new SVD(tfIdfMatrixFile.getAbsolutePath(), outputDirName + "X", dim);
+            new SVD(tfIdfMatrixFile.getAbsolutePath(), outputDirName + "X", dim, svdCommand);
 
             File denseTextUtFile = new File(outputDirName + "X-Ut");
             File tmpDenseTextUtFile = new File(outputDirName + "X-Ut.tmp");
@@ -124,7 +137,18 @@ public class CreateLsa {
             logConfig = "log-config.txt";
         }
 
-        PropertyConfigurator.configure(logConfig);
+//        PropertyConfigurator.configure(logConfig);
+        Properties defaultProps = new Properties();
+        try {
+            defaultProps.load(new InputStreamReader(new FileInputStream(logConfig), "UTF-8"));
+        } catch (Exception e) {
+            defaultProps.setProperty("log4j.appender.stdout", "org.apache.log4j.ConsoleAppender");
+            defaultProps.setProperty("log4j.appender.stdout.layout.ConversionPattern", "[%t] %-5p (%F:%L) - %m %n");
+            defaultProps.setProperty("log4j.appender.stdout.layout", "org.apache.log4j.PatternLayout");
+            defaultProps.setProperty("log4j.appender.stdout.Encoding", "UTF-8");
+            defaultProps.setProperty("log4j.rootLogger", "info,stdout");
+        }
+        PropertyConfigurator.configure(defaultProps);
 
         Options options = new Options();
         try {
@@ -146,6 +170,9 @@ public class CreateLsa {
                     .withDescription("file from which to read the stopwords").withLongOpt("stopwords").create("s");
             Option langOpt = OptionBuilder.withArgName("string").hasArg()
                     .withDescription("if specified, use a language-specific stemmer").withLongOpt("lang").create("l");
+            Option svdOpt = OptionBuilder.withArgName("command").hasArg()
+                    .withDescription("SVD command").withLongOpt("svd").isRequired()
+                    .create();
 
             options.addOption("h", "help", false, "print this message");
             options.addOption("v", "version", false, "output version information and exit");
@@ -153,6 +180,7 @@ public class CreateLsa {
             options.addOption(corpusFileOpt);
             options.addOption(modelDirOpt);
             options.addOption(dimOpt);
+            options.addOption(svdOpt);
 
             options.addOption(cutoffOpt);
             options.addOption(stopWordsFileOpt);
@@ -187,6 +215,7 @@ public class CreateLsa {
                 stopWordFile = new File(line.getOptionValue("stopwords"));
             }
 
+            String svdCommand = line.getOptionValue("svd");
             Stemmer stemmer = null;
             if (line.hasOption("lang")) {
                 try {
@@ -196,7 +225,7 @@ public class CreateLsa {
                 }
             }
             new CreateLsa(new File(line.getOptionValue("corpus-file")), modelDir, dim, cutoff, numDoc, stopWordFile,
-                    stemmer);
+                    stemmer, svdCommand);
 
         } catch (ParseException e) {
             // oops, something went wrong
