@@ -337,6 +337,7 @@ public class JSONOutputter extends AnnotationOutputter {
             tokenObj.addProperty("characterOffsetBegin", token.beginPosition());
             tokenObj.addProperty("characterOffsetEnd", token.endPosition());
             tokenObj.addProperty("pos", token.tag());
+            tokenObj.addProperty("featuresText", token.get(CoreAnnotations.FeaturesAnnotation.class));
             tokenObj.addProperty("ner", token.ner());
             tokenObj.addProperty("normalizedNER",
                     token.get(CoreAnnotations.NormalizedNamedEntityTagAnnotation.class));
