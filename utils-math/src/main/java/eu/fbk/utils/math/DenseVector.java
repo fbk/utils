@@ -104,7 +104,7 @@ public class DenseVector implements Vector {
         int i = 0;
         while (it2.hasNext()) {
             i = it2.next();
-            m.add(i + v.size(), v.get(i));
+            m.add(i + size(), v.get(i));
         } // end while
 
         return m;
@@ -120,7 +120,7 @@ public class DenseVector implements Vector {
         }
 
         for (int i = 0; i < v.size(); i++) {
-            m.add(i + v.size(), v.get(i));
+            m.add(i + size(), v.get(i));
         }
         return m;
     } // end mergeDense
