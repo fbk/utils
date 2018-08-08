@@ -25,6 +25,7 @@
         <module>utils-gson</module>
         <module>utils-corenlp</module>
         <module>utils-wikipedia</module>
+        <module>utils-scraping</module>
     </modules>
 
     <parent>
