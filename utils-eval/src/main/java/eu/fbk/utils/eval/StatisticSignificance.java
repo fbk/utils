@@ -4,14 +4,12 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import eu.fbk.utils.core.CommandLine;
 import org.apache.commons.math3.stat.inference.TTest;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -20,7 +18,7 @@ import java.util.List;
 
 public class StatisticSignificance {
 
-//    private static final Logger LOGGER = LoggerFactory.getLogger(StatisticSignificance.class);
+    //    private static final Logger LOGGER = LoggerFactory.getLogger(StatisticSignificance.class);
     private static NumberFormat formatter = new DecimalFormat("#0.00000");
 
     public static double[] convertDoubles(List<Double> doubles) {
