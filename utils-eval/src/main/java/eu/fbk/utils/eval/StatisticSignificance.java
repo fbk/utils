@@ -20,7 +20,7 @@ import java.util.List;
 
 public class StatisticSignificance {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(StatisticSignificance.class);
+//    private static final Logger LOGGER = LoggerFactory.getLogger(StatisticSignificance.class);
     private static NumberFormat formatter = new DecimalFormat("#0.00000");
 
     public static double[] convertDoubles(List<Double> doubles) {
@@ -74,15 +74,17 @@ public class StatisticSignificance {
                 double[] c1d = convertDoubles(c1);
                 double[] c2d = convertDoubles(c2);
 
-                LOGGER.trace(Arrays.toString(c1d));
-                LOGGER.trace(Arrays.toString(c2d));
+//                LOGGER.trace(Arrays.toString(c1d));
+//                LOGGER.trace(Arrays.toString(c2d));
 
                 TTest test = new TTest();
                 double p = test.pairedTTest(c1d, c2d);
                 double r = ApproximateRandomization.test(1000, c1d, c2d);
-                LOGGER.info("{} ---> t-test {}", file.getName(), formatter.format(p));
-                LOGGER.info("{} ---> appr-rand {}", file.getName(), formatter.format(r));
-                LOGGER.debug("");
+                System.out.println(formatter.format(p));
+                System.out.println(formatter.format(r));
+//                LOGGER.info("{} ---> t-test {}", file.getName(), formatter.format(p));
+//                LOGGER.info("{} ---> appr-rand {}", file.getName(), formatter.format(r));
+//                LOGGER.debug("");
             }
 
         } catch (Exception e) {
