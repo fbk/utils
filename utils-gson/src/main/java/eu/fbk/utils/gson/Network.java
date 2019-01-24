@@ -7,11 +7,53 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.Socket;
+import java.net.*;
 import java.util.Map;
 
 
 public class Network {
+
+    private static Integer DEFAULT_TIMEOUT = 2000;
+
+    static public String postRequest(String host, int port, Map<String, String> pars) throws IOException {
+        Gson gson = new GsonBuilder().create();
+        String json = gson.toJson(pars);
+        String fromServer = null;
+
+        String urlAddress = "http://" + host + ":" + Integer.toString(port) + "/";
+
+        URL serverAddress = new URL(urlAddress);
+
+        StringBuilder sb = new StringBuilder();
+
+        HttpURLConnection connection;
+
+        connection = (HttpURLConnection) serverAddress.openConnection();
+
+        try {
+            connection.setRequestMethod("POST");
+            connection.setConnectTimeout(Integer.parseInt(DEFAULT_TIMEOUT.toString()));
+            connection.setRequestProperty("Content-type", "application/x-www-form-urlencoded; charset=UTF-8");
+            connection.setRequestProperty("Accept", "application/json");
+            connection.setDoOutput(true);
+            connection.getOutputStream().write(json.getBytes("UTF-8"));
+            connection.connect();
+
+            // read the result from the server
+            try (BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                while ((fromServer = rd.readLine()) != null) {
+                    sb.append(fromServer + '\n');
+                }
+            }
+
+        } catch (Throwable e) {
+            e.printStackTrace();
+        } finally {
+            connection.disconnect();
+        }
+
+        return sb.toString();
+    }
 
     static public String request(String host, int port, Map<String, String> pars) throws IOException {
         Gson gson = new GsonBuilder().create();
