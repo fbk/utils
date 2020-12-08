@@ -23,6 +23,7 @@ import java.util.List;
 public class ExperimentList {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentList.class);
+    private static final Boolean useID = false;
 
     public static void main(String[] args) {
         try {
@@ -42,13 +43,20 @@ public class ExperimentList {
 
             HashMap<String, LabelledVector> vectorIndex = new HashMap<>();
             List<LabelledVector> vectors = new ArrayList<>();
+            int idInt = 0;
             for (String line : lines) {
                 String[] parts = line.split("\\s+");
                 final Vector.Builder builder = eu.fbk.utils.svm.Vector.builder();
 
-                String id = parts[0];
-                Integer label = Integer.parseInt(parts[1]);
-                for (int i = 2; i < parts.length; i++) {
+                idInt++;
+                String id = Integer.toString(idInt);
+                int start = 0;
+                if (useID) {
+                    id = parts[0];
+                    start = 1;
+                }
+                Integer label = Integer.parseInt(parts[start]);
+                for (int i = start + 1; i < parts.length; i++) {
                     String part = parts[i];
                     String[] splitted = part.split(":");
                     String featName = "feat" + splitted[0];
@@ -66,7 +74,7 @@ public class ExperimentList {
                 String configLine = configLines.get(i1);
 
                 System.out.println(String.format("Line %d/%d", i1 + 1, configLines.size()));
-                
+
                 configLine = configLine.trim();
                 if (configLine.startsWith("#")) {
                     continue;
@@ -89,13 +97,20 @@ public class ExperimentList {
                 }
 
                 int numWeights = configParts.length - 4;
-                if (numWeights != numLabels) {
-                    throw new Exception("Incoherent information about weights");
-                }
-
                 float[] weights = new float[numWeights];
-                for (int i = 4; i < configParts.length; i++) {
-                    weights[i - 4] = Float.parseFloat(configParts[i]);
+
+                if (numWeights != numLabels) {
+//                    System.out.println("Weights: " + numWeights);
+//                    System.out.println("Labels: " + numLabels);
+//                    throw new Exception("Incoherent information about weights");
+                    weights = new float[numLabels];
+                    for (int i = 0; i < numLabels; i++) {
+                        weights[i] = 1;
+                    }
+                } else {
+                    for (int i = 4; i < configParts.length; i++) {
+                        weights[i - 4] = Float.parseFloat(configParts[i]);
+                    }
                 }
 
                 Classifier.Parameters parameters;
@@ -120,6 +135,7 @@ public class ExperimentList {
                     buffer.append(key).append("\t").append(vectorIndex.get(key).getLabel()).append("\t").append(results.get(key));
                     writer.append(buffer.toString()).append("\n");
                 }
+                writer.flush();
             }
 
             writer.close();
