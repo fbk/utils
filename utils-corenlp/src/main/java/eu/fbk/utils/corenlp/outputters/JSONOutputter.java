@@ -306,11 +306,10 @@ public class JSONOutputter extends edu.stanford.nlp.pipeline.AnnotationOutputter
             // Constituents
             Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
             StringWriter treeStrWriter = new StringWriter();
-            TreePrint treePrinter = options.constituentTreePrinter;
-            if (treePrinter == AnnotationOutputter.DEFAULT_CONSTITUENT_TREE_PRINTER) {
-                // note the '==' -- we're overwriting the default, but only if it was not explicitly set otherwise
-                treePrinter = new TreePrint("oneline");
-            }
+            TreePrint treePrinter = options.constituencyTreePrinter;
+//            if (treePrinter == AnnotationOutputter.DEFAULT_CONSTITUENCY_TREE_PRINTER) {
+//                treePrinter = new TreePrint("oneline");
+//            }
             treePrinter.printTree(tree,
                     new PrintWriter(treeStrWriter, true));
             sentenceObj.addProperty("parse", treeStrWriter.toString().trim());
