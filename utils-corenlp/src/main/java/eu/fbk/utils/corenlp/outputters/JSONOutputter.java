@@ -11,6 +11,7 @@ import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.naturalli.NaturalLogicAnnotations;
 import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.AnnotationOutputter;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
@@ -36,7 +37,7 @@ import java.util.List;
  * @author Alessio Palmero Aprosio
  */
 @SuppressWarnings("unused")
-public class JSONOutputter extends AnnotationOutputter {
+public class JSONOutputter extends edu.stanford.nlp.pipeline.AnnotationOutputter {
 
     private final ThreadLocal<Annotation> annotationThreadLocal = new ThreadLocal<>();
     GsonBuilder gsonBuilder;
@@ -261,6 +262,7 @@ public class JSONOutputter extends AnnotationOutputter {
         if (options.pretty) {
             gsonBuilder.setPrettyPrinting();
         }
+
         gsonBuilder.registerTypeAdapter(SemanticGraph.class, new SemanticGraphSerializer());
         gsonBuilder.registerTypeAdapter(Span.class, new SpanSerializer());
         gsonBuilder.registerTypeAdapter(RelationTriple.class, new RelationTripleSerializer());
