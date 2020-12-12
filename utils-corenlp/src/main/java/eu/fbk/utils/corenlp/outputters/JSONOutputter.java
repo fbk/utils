@@ -23,6 +23,7 @@ import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreeCoreAnnotations;
 import edu.stanford.nlp.trees.TreePrint;
 import edu.stanford.nlp.util.CoreMap;
+import edu.stanford.nlp.util.IntPair;
 import edu.stanford.nlp.util.TypesafeMap;
 import eu.fbk.utils.gson.AnnotationExclusionStrategy;
 import eu.fbk.utils.gson.JSONLabel;
@@ -359,6 +360,12 @@ public class JSONOutputter extends edu.stanford.nlp.pipeline.AnnotationOutputter
             tokenObj.addProperty("truecaseText", token.get(CoreAnnotations.TrueCaseTextAnnotation.class));
             tokenObj.addProperty("before", token.get(CoreAnnotations.BeforeAnnotation.class));
             tokenObj.addProperty("after", token.get(CoreAnnotations.AfterAnnotation.class));
+            tokenObj.addProperty("isMultiwordToken", token.get(CoreAnnotations.IsMultiWordTokenAnnotation.class));
+            tokenObj.addProperty("isMultiwordFirstToken", token.get(CoreAnnotations.IsFirstWordOfMWTAnnotation.class));
+            if (token.containsKey(CoreAnnotations.CoNLLUTokenSpanAnnotation.class)) {
+                IntPair tokenSpan = token.get(CoreAnnotations.CoNLLUTokenSpanAnnotation.class);
+                tokenObj.addProperty("multiwordSpan", "" + tokenSpan.getSource() + "-" + tokenSpan.getTarget());
+            }
 
             // Timex
             tokenObj.add("timex", jsonSerializationContext.serialize(token.get(TimeAnnotations.TimexAnnotation.class)));
