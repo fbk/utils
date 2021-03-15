@@ -53,7 +53,7 @@ public class TextProOutputter extends AnnotationOutputter {
 
         fields.add(Integer.toString(index)); // 1
         fields.add(Integer.toString(index - lastIndex)); // 1
-        fields.add(orNull(token.word()));    // 2
+        fields.add(orNull(token.originalText()));    // 2
         fields.add(orNull(token.lemma()));   // 3
         fields.add(orNull(token.tag()));     // 4
         fields.add(orNull(token.ner()));     // 5
@@ -129,8 +129,10 @@ public class TextProOutputter extends AnnotationOutputter {
                         }
 
                         index = coreLabel.get(CoreAnnotations.IndexAnnotation.class);
-                        writer.print(line(index, coreLabel, govIdx, relnName, lastIndex));
-                        writer.println();
+                        if (!coreLabel.isMWT() || coreLabel.isMWTFirst()) {
+                            writer.print(line(index, coreLabel, govIdx, relnName, lastIndex));
+                            writer.println();
+                        }
                     }
                     lastIndex = index;
                     writer.println();
