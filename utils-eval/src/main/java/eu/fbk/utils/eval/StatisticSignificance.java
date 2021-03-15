@@ -4,14 +4,12 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import eu.fbk.utils.core.CommandLine;
 import org.apache.commons.math3.stat.inference.TTest;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -20,7 +18,7 @@ import java.util.List;
 
 public class StatisticSignificance {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(StatisticSignificance.class);
+    //    private static final Logger LOGGER = LoggerFactory.getLogger(StatisticSignificance.class);
     private static NumberFormat formatter = new DecimalFormat("#0.00000");
 
     public static double[] convertDoubles(List<Double> doubles) {
@@ -74,15 +72,17 @@ public class StatisticSignificance {
                 double[] c1d = convertDoubles(c1);
                 double[] c2d = convertDoubles(c2);
 
-                LOGGER.trace(Arrays.toString(c1d));
-                LOGGER.trace(Arrays.toString(c2d));
+//                LOGGER.trace(Arrays.toString(c1d));
+//                LOGGER.trace(Arrays.toString(c2d));
 
                 TTest test = new TTest();
                 double p = test.pairedTTest(c1d, c2d);
                 double r = ApproximateRandomization.test(1000, c1d, c2d);
-                LOGGER.info("{} ---> t-test {}", file.getName(), formatter.format(p));
-                LOGGER.info("{} ---> appr-rand {}", file.getName(), formatter.format(r));
-                LOGGER.debug("");
+                System.out.println(formatter.format(p));
+                System.out.println(formatter.format(r));
+//                LOGGER.info("{} ---> t-test {}", file.getName(), formatter.format(p));
+//                LOGGER.info("{} ---> appr-rand {}", file.getName(), formatter.format(r));
+//                LOGGER.debug("");
             }
 
         } catch (Exception e) {

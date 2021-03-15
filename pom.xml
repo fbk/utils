@@ -8,7 +8,7 @@
     <groupId>eu.fbk.utils</groupId>
     <artifactId>utils</artifactId>
     <packaging>pom</packaging>
-    <version>3.1.1</version>
+    <version>3.1.2</version>
     <inceptionYear>2016</inceptionYear>
 
     <modules>
@@ -25,6 +25,7 @@
         <module>utils-gson</module>
         <module>utils-corenlp</module>
         <module>utils-wikipedia</module>
+        <module>utils-scraping</module>
     </modules>
 
     <parent>
@@ -109,5 +110,23 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
+
+    <scm>
+        <connection>scm:git:git://github.com/fbk/utils.git</connection>
+        <developerConnection>scm:git:git@github.com:fbk/utils.git</developerConnection>
+        <url>https://github.com/fbk/utils.git</url>
+    </scm>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/
+            </url>
+        </repository>
+    </distributionManagement>
 
 </project>

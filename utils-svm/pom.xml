@@ -5,7 +5,7 @@
     <parent>
         <artifactId>utils</artifactId>
         <groupId>eu.fbk.utils</groupId>
-        <version>3.1.1</version>
+        <version>3.1.2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -48,7 +48,7 @@
     
     <profiles>
         <profile>
-            <id>release</id>
+            <id>bigjar</id>
             <activation>
                 <activeByDefault>false</activeByDefault>
             </activation>

@@ -11,6 +11,7 @@ import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.naturalli.NaturalLogicAnnotations;
 import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.AnnotationOutputter;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
@@ -22,6 +23,7 @@ import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreeCoreAnnotations;
 import edu.stanford.nlp.trees.TreePrint;
 import edu.stanford.nlp.util.CoreMap;
+import edu.stanford.nlp.util.IntPair;
 import edu.stanford.nlp.util.TypesafeMap;
 import eu.fbk.utils.gson.AnnotationExclusionStrategy;
 import eu.fbk.utils.gson.JSONLabel;
@@ -36,12 +38,12 @@ import java.util.List;
  * @author Alessio Palmero Aprosio
  */
 @SuppressWarnings("unused")
-public class JSONOutputter extends AnnotationOutputter {
+public class JSONOutputter extends edu.stanford.nlp.pipeline.AnnotationOutputter {
 
     private final ThreadLocal<Annotation> annotationThreadLocal = new ThreadLocal<>();
-    GsonBuilder gsonBuilder = new GsonBuilder();
+    GsonBuilder gsonBuilder;
 
-    static private void add(Gson gson, JsonObject jsonObject, TypesafeMap annotation) {
+    static private void add(JsonSerializationContext jsonSerializationContext, JsonObject jsonObject, TypesafeMap annotation) {
         for (Class<?> myClass : annotation.keySet()) {
             Object o = annotation.get((Class) myClass);
             if (o != null) {
@@ -50,7 +52,7 @@ public class JSONOutputter extends AnnotationOutputter {
                     String name = JsonAnnotation.value();
                     if (name != null && name.length() > 0) {
                         try {
-                            jsonObject.add(name, gson.toJsonTree(o));
+                            jsonObject.add(name, jsonSerializationContext.serialize(o));
                         } catch (Exception e) {
                             // ignored
                         }
@@ -162,6 +164,65 @@ public class JSONOutputter extends AnnotationOutputter {
         }
     }
 
+    class AnnotationSerializer implements JsonSerializer<Annotation> {
+
+        private Options options;
+
+        public AnnotationSerializer(Options options) {
+            this.options = options;
+        }
+
+        @Override
+        public JsonElement serialize(Annotation doc, Type type, JsonSerializationContext jsonSerializationContext) {
+            JsonObject jsonObject = new JsonObject();
+
+            String text = doc.get(CoreAnnotations.TextAnnotation.class);
+            jsonObject.addProperty("docId", doc.get(CoreAnnotations.DocIDAnnotation.class));
+            jsonObject.addProperty("docDate", doc.get(CoreAnnotations.DocDateAnnotation.class));
+            jsonObject.addProperty("docSourceType", doc.get(CoreAnnotations.DocSourceTypeAnnotation.class));
+            jsonObject.addProperty("docType", doc.get(CoreAnnotations.DocTypeAnnotation.class));
+            jsonObject.addProperty("author", doc.get(CoreAnnotations.AuthorAnnotation.class));
+            jsonObject.addProperty("location", doc.get(CoreAnnotations.LocationAnnotation.class));
+            if (options.includeText) {
+                jsonObject.addProperty("text", text);
+            }
+
+            List<CoreMap> quotes = doc.get(CoreAnnotations.QuotationsAnnotation.class);
+            if (quotes != null && quotes.size() > 0) {
+                JsonArray jsonQuotesArray = new JsonArray();
+                for (CoreMap quote : quotes) {
+                    JsonObject quoteObj = new JsonObject();
+
+                    List<CoreLabel> tokens = quote.get(CoreAnnotations.TokensAnnotation.class);
+                    int begin = tokens.get(0).beginPosition();
+                    int end = tokens.get(tokens.size() - 1).endPosition();
+
+                    int beginContext = Math.max(0, begin - 100);
+                    int endContext = Math.min(end + 100, text.length());
+                    quoteObj.addProperty("text", quote.get(CoreAnnotations.TextAnnotation.class));
+                    quoteObj.addProperty("context", text.substring(beginContext, endContext));
+                    quoteObj.addProperty("characterOffsetBegin", begin);
+                    quoteObj.addProperty("characterOffsetEnd", end);
+                    jsonQuotesArray.add(quoteObj);
+                }
+                jsonObject.add("quotes", jsonQuotesArray);
+            }
+
+            add(jsonSerializationContext, jsonObject, doc);
+
+            // Sentences
+            if (doc.get(CoreAnnotations.SentencesAnnotation.class) != null) {
+                addSentences(jsonSerializationContext, jsonObject, doc.get(CoreAnnotations.SentencesAnnotation.class), options);
+            }
+
+            // Add coref values
+            annotationThreadLocal.set(doc);
+            jsonObject.add("corefs", jsonSerializationContext.serialize(doc.get(CorefCoreAnnotations.CorefChainAnnotation.class)));
+
+            return jsonObject;
+        }
+    }
+
     class CorefChainSerializer implements JsonSerializer<CorefChain> {
 
         @Override
@@ -202,6 +263,7 @@ public class JSONOutputter extends AnnotationOutputter {
         if (options.pretty) {
             gsonBuilder.setPrettyPrinting();
         }
+
         gsonBuilder.registerTypeAdapter(SemanticGraph.class, new SemanticGraphSerializer());
         gsonBuilder.registerTypeAdapter(Span.class, new SpanSerializer());
         gsonBuilder.registerTypeAdapter(RelationTriple.class, new RelationTripleSerializer());
@@ -209,64 +271,18 @@ public class JSONOutputter extends AnnotationOutputter {
         gsonBuilder.registerTypeAdapter(CorefChain.class, new CorefChainSerializer());
         gsonBuilder.registerTypeAdapter(CoreLabel.class, new CoreLabelSerializer());
         gsonBuilder.registerTypeAdapter(Double.class, new DoubleSerializer());
+        gsonBuilder.registerTypeAdapter(Annotation.class, new AnnotationSerializer(options));
 
         gsonBuilder.serializeSpecialFloatingPointValues();
         gsonBuilder.setExclusionStrategies(new AnnotationExclusionStrategy());
         Gson gson = gsonBuilder.create();
 
-        String text = doc.get(CoreAnnotations.TextAnnotation.class);
-
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("docId", doc.get(CoreAnnotations.DocIDAnnotation.class));
-        jsonObject.addProperty("docDate", doc.get(CoreAnnotations.DocDateAnnotation.class));
-        jsonObject.addProperty("docSourceType", doc.get(CoreAnnotations.DocSourceTypeAnnotation.class));
-        jsonObject.addProperty("docType", doc.get(CoreAnnotations.DocTypeAnnotation.class));
-        jsonObject.addProperty("author", doc.get(CoreAnnotations.AuthorAnnotation.class));
-        jsonObject.addProperty("location", doc.get(CoreAnnotations.LocationAnnotation.class));
-        if (options.includeText) {
-            jsonObject.addProperty("text", text);
-        }
-
-        List<CoreMap> quotes = doc.get(CoreAnnotations.QuotationsAnnotation.class);
-        if (quotes != null && quotes.size() > 0) {
-            JsonArray jsonQuotesArray = new JsonArray();
-            for (CoreMap quote : quotes) {
-                JsonObject quoteObj = new JsonObject();
-
-                List<CoreLabel> tokens = quote.get(CoreAnnotations.TokensAnnotation.class);
-                int begin = tokens.get(0).beginPosition();
-                int end = tokens.get(tokens.size() - 1).endPosition();
-
-                int beginContext = Math.max(0, begin - 100);
-                int endContext = Math.min(end + 100, text.length());
-                quoteObj.addProperty("text", quote.get(CoreAnnotations.TextAnnotation.class));
-                quoteObj.addProperty("context", text.substring(beginContext, endContext));
-                quoteObj.addProperty("characterOffsetBegin", begin);
-                quoteObj.addProperty("characterOffsetEnd", end);
-                jsonQuotesArray.add(quoteObj);
-            }
-            jsonObject.add("quotes", jsonQuotesArray);
-        }
-
-        add(gson, jsonObject, doc);
-
-        // Sentences
-        if (doc.get(CoreAnnotations.SentencesAnnotation.class) != null) {
-            addSentences(gson, jsonObject, doc.get(CoreAnnotations.SentencesAnnotation.class), options);
-        }
-
-        // Add coref values
-        annotationThreadLocal.set(doc);
-        jsonObject.add("corefs", gson.toJsonTree(doc.get(CorefCoreAnnotations.CorefChainAnnotation.class)));
-
-//        System.out.println(gson.toJson(jsonObject));
-
         Writer w = new OutputStreamWriter(target);
-        w.write(gson.toJson(jsonObject));
+        w.write(gson.toJson(doc));
         w.flush();
     }
 
-    private static void addSentences(Gson gson, JsonObject jsonObject, List<CoreMap> sentences,
+    private static void addSentences(JsonSerializationContext jsonSerializationContext, JsonObject jsonObject, List<CoreMap> sentences,
                                      Options options) {
         JsonArray jsonSentenceArray = new JsonArray();
         for (CoreMap sentence : sentences) {
@@ -282,20 +298,19 @@ public class JSONOutputter extends AnnotationOutputter {
 
             // Dependencies
             sentenceObj.add("basic-dependencies",
-                    gson.toJsonTree(sentence.get(SemanticGraphCoreAnnotations.BasicDependenciesAnnotation.class)));
-            sentenceObj.add("collapsed-dependencies", gson.toJsonTree(
+                    jsonSerializationContext.serialize(sentence.get(SemanticGraphCoreAnnotations.BasicDependenciesAnnotation.class)));
+            sentenceObj.add("collapsed-dependencies", jsonSerializationContext.serialize(
                     sentence.get(SemanticGraphCoreAnnotations.CollapsedDependenciesAnnotation.class)));
-            sentenceObj.add("collapsed-ccprocessed-dependencies", gson.toJsonTree(
+            sentenceObj.add("collapsed-ccprocessed-dependencies", jsonSerializationContext.serialize(
                     sentence.get(SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation.class)));
 
             // Constituents
             Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
             StringWriter treeStrWriter = new StringWriter();
-            TreePrint treePrinter = options.constituentTreePrinter;
-            if (treePrinter == AnnotationOutputter.DEFAULT_CONSTITUENT_TREE_PRINTER) {
-                // note the '==' -- we're overwriting the default, but only if it was not explicitly set otherwise
-                treePrinter = new TreePrint("oneline");
-            }
+            TreePrint treePrinter = options.constituencyTreePrinter;
+//            if (treePrinter == AnnotationOutputter.DEFAULT_CONSTITUENCY_TREE_PRINTER) {
+//                treePrinter = new TreePrint("oneline");
+//            }
             treePrinter.printTree(tree,
                     new PrintWriter(treeStrWriter, true));
             sentenceObj.addProperty("parse", treeStrWriter.toString().trim());
@@ -310,22 +325,21 @@ public class JSONOutputter extends AnnotationOutputter {
             }
 
             // OpenIE
-            sentenceObj.add("openie", gson.toJsonTree(sentence
-                    .get(NaturalLogicAnnotations.RelationTriplesAnnotation.class)));
+            sentenceObj.add("openie", jsonSerializationContext.serialize(sentence.get(NaturalLogicAnnotations.RelationTriplesAnnotation.class)));
 
             // Tokens
             if (sentence.get(CoreAnnotations.TokensAnnotation.class) != null) {
-                addTokens(gson, sentenceObj, sentence.get(CoreAnnotations.TokensAnnotation.class));
+                addTokens(jsonSerializationContext, sentenceObj, sentence.get(CoreAnnotations.TokensAnnotation.class));
             }
 
-            add(gson, sentenceObj, sentence);
+            add(jsonSerializationContext, sentenceObj, sentence);
 
             jsonSentenceArray.add(sentenceObj);
         }
         jsonObject.add("sentences", jsonSentenceArray);
     }
 
-    private static void addTokens(Gson gson, JsonObject sentenceObj, List<CoreLabel> tokens) {
+    private static void addTokens(JsonSerializationContext jsonSerializationContext, JsonObject sentenceObj, List<CoreLabel> tokens) {
         JsonArray jsonTokenArray = new JsonArray();
         for (CoreLabel token : tokens) {
             JsonObject tokenObj = new JsonObject();
@@ -346,11 +360,17 @@ public class JSONOutputter extends AnnotationOutputter {
             tokenObj.addProperty("truecaseText", token.get(CoreAnnotations.TrueCaseTextAnnotation.class));
             tokenObj.addProperty("before", token.get(CoreAnnotations.BeforeAnnotation.class));
             tokenObj.addProperty("after", token.get(CoreAnnotations.AfterAnnotation.class));
+            tokenObj.addProperty("isMultiwordToken", token.get(CoreAnnotations.IsMultiWordTokenAnnotation.class));
+            tokenObj.addProperty("isMultiwordFirstToken", token.get(CoreAnnotations.IsFirstWordOfMWTAnnotation.class));
+            if (token.containsKey(CoreAnnotations.CoNLLUTokenSpanAnnotation.class)) {
+                IntPair tokenSpan = token.get(CoreAnnotations.CoNLLUTokenSpanAnnotation.class);
+                tokenObj.addProperty("multiwordSpan", "" + tokenSpan.getSource() + "-" + tokenSpan.getTarget());
+            }
 
             // Timex
-            tokenObj.add("timex", gson.toJsonTree(token.get(TimeAnnotations.TimexAnnotation.class)));
+            tokenObj.add("timex", jsonSerializationContext.serialize(token.get(TimeAnnotations.TimexAnnotation.class)));
 
-            add(gson, tokenObj, token);
+            add(jsonSerializationContext, tokenObj, token);
 
             jsonTokenArray.add(tokenObj);
         }
