@@ -113,8 +113,8 @@ public class StringUtil {
      * Splits the specified string around matches of the given
      * delimiting char.
      *
-     * @param str the	string
-     * @param ch  the delimiting char
+     * @param str the string
+     * @param delim the delimiting char
      * @return the list of strings computed by splitting the string around
      * matches of the given char
      */

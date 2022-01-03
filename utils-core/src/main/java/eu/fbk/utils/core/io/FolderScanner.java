@@ -28,16 +28,16 @@ import java.util.Stack;
  * the starging directory, illustrates how to use a folder
  * scanner.
  * <p>
- * <pre>
+ * <pre>{@code
  * 		FolderScanner fs = new FolderScanner(root);
  * 		while (fs.hasNext())
  *        {
  * 			Object[] files = fs.next();
  *
- * 			for (int i=0;i<files.length;i++)
+ * 			for (int i = 0; i < files.length; i++)
  * 				System.out.println((File) files[i]);
  *        }
- * </pre>
+ * }</pre>
  *
  * @author Claudio Giuliano
  * @version %I%, %G%
@@ -84,7 +84,7 @@ public final class FolderScanner {
     /**
      * Sets a file filter for this scanner
      *
-     * @param root the root directory.
+     * @param filter the filter.
      */
     public void setFiler(FileFilter filter) {
         //System.out.println("FolderScanner.setFiler");
@@ -94,7 +94,7 @@ public final class FolderScanner {
     /**
      * Sets a file filter for this scanner
      *
-     * @param root the root directory.
+     * @param filter the filter.
      */
     public void setFilter(FileFilter filter) {
         //System.out.println("FolderScanner.setFilter");
