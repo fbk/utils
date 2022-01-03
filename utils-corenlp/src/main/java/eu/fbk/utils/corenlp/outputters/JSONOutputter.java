@@ -11,12 +11,12 @@ import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.naturalli.NaturalLogicAnnotations;
 import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
-import edu.stanford.nlp.pipeline.AnnotationOutputter;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.semgraph.SemanticGraph;
 import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.sentiment.SentimentCoreAnnotations;
+import edu.stanford.nlp.stats.Counter;
 import edu.stanford.nlp.time.TimeAnnotations;
 import edu.stanford.nlp.time.Timex;
 import edu.stanford.nlp.trees.Tree;
@@ -31,6 +31,8 @@ import eu.fbk.utils.gson.JSONLabel;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Output an Annotation to JSON.
@@ -51,9 +53,30 @@ public class JSONOutputter extends edu.stanford.nlp.pipeline.AnnotationOutputter
                     JSONLabel JsonAnnotation = myClass.getAnnotation(JSONLabel.class);
                     String name = JsonAnnotation.value();
                     if (name != null && name.length() > 0) {
+//                        Method toJsonMethod = null;
+//                        try {
+//                            toJsonMethod = myClass.getMethod("toJSON");
+//                            System.out.println("Method exist for class " + myClass);
+//                        } catch (NoSuchMethodException e) {
+//                            System.out.println("Method does not exist for class " + myClass);
+//                            // Method does not exist
+//                            // ignored
+//                        }
+//                        if (toJsonMethod == null) {
+//                            try {
+//                                jsonObject.add(name, jsonSerializationContext.serialize(o));
+//                            } catch (Exception e) {
+//                                // Something is not serializable
+//                                // ignored
+//                            }
+//                        }
+//                        else {
+//                            // Invoke method
+//                        }
                         try {
                             jsonObject.add(name, jsonSerializationContext.serialize(o));
                         } catch (Exception e) {
+                            // Something is not serializable
                             // ignored
                         }
                     }
@@ -67,6 +90,21 @@ public class JSONOutputter extends edu.stanford.nlp.pipeline.AnnotationOutputter
 
                 }
             }
+        }
+    }
+
+    class CounterSerializer implements JsonSerializer<Counter> {
+
+        @Override
+        public JsonElement serialize(Counter counter, Type type, JsonSerializationContext jsonSerializationContext) {
+            JsonObject object = new JsonObject();
+            Set<Map.Entry<?, Double>> set1 = counter.entrySet();
+            for (Map.Entry<?, Double> entry : set1) {
+                if (entry.getKey() instanceof String) {
+                    object.add((String) entry.getKey(), jsonSerializationContext.serialize(entry.getValue()));
+                }
+            }
+            return object;
         }
     }
 
@@ -272,6 +310,7 @@ public class JSONOutputter extends edu.stanford.nlp.pipeline.AnnotationOutputter
         gsonBuilder.registerTypeAdapter(CoreLabel.class, new CoreLabelSerializer());
         gsonBuilder.registerTypeAdapter(Double.class, new DoubleSerializer());
         gsonBuilder.registerTypeAdapter(Annotation.class, new AnnotationSerializer(options));
+        gsonBuilder.registerTypeAdapter(Counter.class, new CounterSerializer());
 
         gsonBuilder.serializeSpecialFloatingPointValues();
         gsonBuilder.setExclusionStrategies(new AnnotationExclusionStrategy());
